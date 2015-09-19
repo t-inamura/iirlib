@@ -74,20 +74,20 @@
 /*-----------------------------------------------------------------------------------*/
 int tl_strmember (const char *reference, const char *search)
 {
-  int		i;
+	int		i;
 
-  if (reference==NULL || search==NULL)
-    return 0;
-  // if length of referred string is shorter than target, return immediately
-  if (strlen(reference) < strlen(search) )
-    return 0;
+	if (reference==NULL || search==NULL)
+		return 0;
+	// if length of referred string is shorter than target, return immediately
+	if (strlen(reference) < strlen(search) )
+		return 0;
 
-  for (i=0; i<(int)(strlen(reference))-(int)(strlen(search))+1; i++)
-    {
-      if (!strncmp( reference+i, search, strlen(search) ) )
-	return i+1;
-    }
-  return 0;
+	for (i=0; i<(int)(strlen(reference))-(int)(strlen(search))+1; i++)
+		{
+			if (!strncmp( reference+i, search, strlen(search) ) )
+				return i+1;
+		}
+	return 0;
 }
 
 
@@ -102,55 +102,54 @@ int tl_strmember (const char *reference, const char *search)
 /*-----------------------------------------------------------------------------------*/
 GString *tl_string_assoc (char *src, char *keyword)
 {
-  char		*charp = NULL, tmp[MAX_STRING];
-  int		i, j, debug=0;
-  GString	*result = NULL;
+	char	*charp = NULL, tmp[MAX_STRING];
+	int		i, j, debug=0;
+	GString	*result = NULL;
   
-  charp = src;
-  result = g_string_new (NULL);
+	charp = src;
+	result = g_string_new (NULL);
   
-  if (!tl_strmember(src, keyword))
-    {
-      tl_warning ("No such keyword {%s} in {%s}", keyword, src );
-      return NULL;
-    }
-  for(;;) {
-    sscanf_word_with_pointer_move (&charp, tmp);
-    if (!strcmp( tmp, keyword )) {
-      // In case of matching
-      tl_skip_pointer( &charp );
-      if (*charp == '(' ) {
-	// If the head char of the result is '(', chunking till ')' comes
-	for( i=0; ;i++ ) {
-	  if (*(charp+i)==')'  ) break;
-	  if (*(charp+i)=='\0' ) { i--; break; }
+	if (!tl_strmember(src, keyword))
+		{
+			tl_warning ("No such keyword {%s} in {%s}", keyword, src );
+			return NULL;
+		}
+	for (;;) {
+		sscanf_word_with_pointer_move (&charp, tmp);
+		if (!strcmp( tmp, keyword )) {
+			// In case of matching
+			tl_skip_pointer( &charp );
+			if (*charp == '(' ) {
+				// If the head char of the result is '(', chunking till ')' comes
+				for (i=0; ;i++) {
+					if (*(charp+i)==')'  ) break;
+					if (*(charp+i)=='\0' ) { i--; break; }
+				}
+				for (j=0; j<=i; j++) g_string_append_c (result, *(charp+j));
+				g_string_append_c (result, '\0');
+				if (debug) tl_message ("get with '()' : i=%d : result=%s", i, result->str);
+				return result;
+			}
+			else {
+				// In case of normal word without '(' and ')'
+				if (sscanf_word_with_pointer_move( &charp, tmp )==TRUE ) {
+					// If case of result, the last ')' is deleted
+					g_string_append (result, tmp);
+					remove_blacket_end (result->str);
+					return result;
+				}
+				else {
+					// In case of matching, but result is not exist
+					return result;
+				}
+			}
+		}
+		else {
+			// Keyword not found
+			if (*charp=='\0' ) return result;
+		}
 	}
-	for( j=0; j<=i; j++ ) g_string_append_c (result, *(charp+j));
-	g_string_append_c (result, '\0');
-	if(debug) tl_message ("get with '()' : i=%d : result=%s", i, result->str);
-	return result;
-      }
-      else {
-	// In case of normal word without '(' and ')'
-	if (sscanf_word_with_pointer_move( &charp, tmp )==TRUE ) {
-	  // If case of result, the last ')' is deleted
-	  g_string_append (result, tmp);
-	  remove_blacket_end (result->str);
-	  return result;
-	}
-	else {
-	  // In case of matching, but result is not exist
-	  return result;
-	}
-      }
-    }
-    else {
-      // Keyword not found
-      if (*charp=='\0' ) return result;
-    }
-  }
 }
-
 
 
 
@@ -167,61 +166,61 @@ GString *tl_string_assoc (char *src, char *keyword)
 /*-----------------------------------------------------------------------------------*/
 int tl_string_getkeyword (char *src, char *keyword, char *result)
 {
-  char		*charp=NULL, tmp[MAX_STRING];
-  int		i, j, debug=0;
+	char	*charp=NULL, tmp[MAX_STRING];
+	int		i, j, debug=0;
 
-  charp = src;
+	charp = src;
 
-  if (!tl_strmember(src, keyword))
-    {
-      tl_warning ("No such keyword {%s} in {%s}", keyword, src );
-      result = NULL;
-      return FALSE;
-    }
-  for(;;)
-    {
-      sscanf_word_with_pointer_move( &charp, tmp );
-      if (!strcmp( tmp, keyword ) )
-	{
-	  // In case of matching
-	  tl_skip_pointer (&charp);
-	  if (*charp == '(' )
-	    {
-	      // If the head char of the result is '(', chunking till ')' comes
-	      for( i=0; ;i++ )
+	if (!tl_strmember(src, keyword))
 		{
-		  if (*(charp+i)==')'  ) break;
-		  if (*(charp+i)=='\0' ) { i--; break;
-		  }
+			tl_warning ("No such keyword {%s} in {%s}", keyword, src );
+			result = NULL;
+			return FALSE;
 		}
-	      for( j=0; j<=i; j++ ) result[j] = *(charp+j);
-	      result[j] = '\0';
-	      //strncpy( result, charp, i+1 );// This will be error when a string without '\0' comes
-	      if(debug) tl_message (" getkeyword with '()' : i=%d : result=%s", i, result );
-	      return TRUE;
-	    }
-	  else {
-	    // In case of normal word without '(' and ')'
-	    if (sscanf_word_with_pointer_move( &charp, tmp )==TRUE ) {
-	      // If case of result, the last ')' is deleted
-	      strcpy( result, tmp );
-	      remove_blacket_end( result );
-	      return TRUE;
-	    }
-	    else {
-	      strcpy(result, "\0");
-	      return FALSE;
-	    }
-	  }
-	}
-      else {
-	// Keyword not found , search more
-	if (*charp=='\0' ) {
-	  strcpy(result, "\0");
-	  return FALSE;
-	}
-      }
-    }
+	for (;;)
+		{
+			sscanf_word_with_pointer_move( &charp, tmp );
+			if (!strcmp( tmp, keyword ) )
+				{
+					// In case of matching
+					tl_skip_pointer (&charp);
+					if (*charp == '(' )
+						{
+							// If the head char of the result is '(', chunking till ')' comes
+							for (i=0; ;i++)
+								{
+									if (*(charp+i)==')'  ) break;
+									if (*(charp+i)=='\0' ) { i--; break;
+									}
+								}
+							for (j=0; j<=i; j++) result[j] = *(charp+j);
+							result[j] = '\0';
+							//strncpy( result, charp, i+1 );// This will be error when a string without '\0' comes
+							if (debug) tl_message (" getkeyword with '()' : i=%d : result=%s", i, result );
+							return TRUE;
+						}
+					else {
+						// In case of normal word without '(' and ')'
+						if (sscanf_word_with_pointer_move( &charp, tmp )==TRUE) {
+							// If case of result, the last ')' is deleted
+							strcpy( result, tmp );
+							remove_blacket_end( result );
+							return TRUE;
+						}
+						else {
+							strcpy(result, "\0");
+							return FALSE;
+						}
+					}
+				}
+			else {
+				// Keyword not found , search more
+				if (*charp=='\0' ) {
+					strcpy(result, "\0");
+					return FALSE;
+				}
+			}
+		}
 }
 
 
@@ -232,42 +231,42 @@ int tl_string_getkeyword (char *src, char *keyword, char *result)
 /*-----------------------------------------------------------------------------------*/
 void remove_backslash_N (char *str)
 {
-  int		debug=0;
-  int		i;
+	int		debug=0;
+	int		i;
 
-  for( i=0; i<=(int)(strlen(str)); i++ )
-    {
-      if(debug) tl_message ("str[%d]='%c' <%d>", i, str[i], str[i]);
-      if (str[i] == '\r' && str[i+1]=='\n')
-	{
-	  if(debug) tl_message ("Found CRLF!");
-	  str[i]   = '\0';
-	  str[i+1] = '\0';
-	  return;
-	}
-      if (str[i] == '\n')
-	{
-	  tl_message ("Found LF (\n)!");
-	  str[i] = '\0';
-	  return;
-	}
-    }
+	for (i=0; i<=(int)(strlen(str)); i++)
+		{
+			if (debug) tl_message ("str[%d]='%c' <%d>", i, str[i], str[i]);
+			if (str[i] == '\r' && str[i+1]=='\n')
+				{
+					if (debug) tl_message ("Found CRLF!");
+					str[i]   = '\0';
+					str[i+1] = '\0';
+					return;
+				}
+			if (str[i] == '\n')
+				{
+					tl_message ("Found LF (\n)!");
+					str[i] = '\0';
+					return;
+				}
+		}
 }
 
 
 int remove_dot( char *string )
 {
-  int		i;
+	int		i;
 
-  for( i=0; i<(int)(strlen(string)); i++ )
-    {
-      if (string[i] == '.' )
-	{
-	  string[i] = '\0';
-	  return 1;
-	}
-    }
-  return 0;
+	for (i=0; i<(int)(strlen(string)); i++)
+		{
+			if (string[i] == '.' )
+				{
+					string[i] = '\0';
+					return 1;
+				}
+		}
+	return 0;
 }
 
 
@@ -277,31 +276,26 @@ int remove_dot( char *string )
 /*-----------------------------------------------------------------------------------*/
 int tl_remove_double_q (char *str, char *str2)
 {
-  int		i, j;
-  int		start=0, end=0, count=0;
+	int		i, j;
+	int		start=0, end=0, count=0;
 
-  for( i=0; ;i++ )
-    {
-      if (str[i] == '"' && start!=0 )
-	{
-	  end = i-1;
-	  count++;
+	for (i=0; ;i++) {
+		if (str[i] == '"' && start!=0) {
+			end = i-1;
+			count++;
+		}
+		if (str[i] == '"' && start==0) {
+			start = i+1;
+			count=1;
+		}
+		if (count==2) break;
 	}
-      if (str[i] == '"' && start==0 )
-	{
-	  start = i+1;
-	  count=1;
+	for (j=0,i=start; i<=end; i++,j++) {
+		str2[j] = str[i];
 	}
-      if (count==2) break;
-    }
-  for ( j=0,i=start; i<=end; i++,j++ )
-    {
-      str2[j] = str[i];
-    }
-  str2[j] = '\0';
-  return TRUE;
+	str2[j] = '\0';
+	return TRUE;
 }
-
 
 
 
@@ -310,18 +304,18 @@ int tl_remove_double_q (char *str, char *str2)
 /*-----------------------------------------------------------------------------------*/
 void add_backslash_N (char *sentence)
 {
-  int		i;
+	int		i;
 
-  for( i=0; ;i++ ) {
-    if (sentence[i]=='\0' ) {
-      if (sentence[i-1]=='\n' ) return;	// normal case
-      else {
-	sentence[i] = '\n';
-	sentence[i+1] = '\0';
-	return;
-      }
-    }
-  }
+	for (i=0; ;i++) {
+		if (sentence[i]=='\0' ) {
+			if (sentence[i-1]=='\n' ) return;	// normal case
+			else {
+				sentence[i] = '\n';
+				sentence[i+1] = '\0';
+				return;
+			}
+		}
+	}
 }
 
 
@@ -336,41 +330,40 @@ void add_backslash_N (char *sentence)
 /*-----------------------------------------------------------------------------------*/
 int sscanf_int_with_pointer_move (char **charp)
 {
-  int		value;
-  int		digit;
-  char		tmp[32];
+	int		value;
+	int		digit;
+	char		tmp[32];
 
-  if (**charp=='\n' || **charp=='\r' || **charp=='\0')
-    {
-      tl_warning ("End of line. You had better using 'with_seeking'" );
-      return FALSE;
-    }
-  // Move the pointer of string in order to skip the space between digits/figures
-  for(;;)
-    {
-      if ((**charp==' ') || (**charp=='\t') || (**charp==','))
-	(*charp)++;
-      else if (((**charp < '0') || (**charp > '9')) && (**charp!='-') )
-	{
-	  // skipping irregular chars with warning
-	  tl_message ("!CAUTION! Not space, Not digit <%c> is mingled! in str {%s}", **charp, *charp );
-	  (*charp)++;
+	if (**charp=='\n' || **charp=='\r' || **charp=='\0')
+		{
+			tl_warning ("End of line. You had better using 'with_seeking'" );
+			return FALSE;
+		}
+	// Move the pointer of string in order to skip the space between digits/figures
+	for (;;) {
+		if ((**charp==' ') || (**charp=='\t') || (**charp==','))
+			(*charp)++;
+		else if (((**charp < '0') || (**charp > '9')) && (**charp!='-') )
+			{
+				// skipping irregular chars with warning
+				tl_message ("!CAUTION! Not space, Not digit <%c> is mingled! in str {%s}", **charp, *charp );
+				(*charp)++;
+			}
+		else break;
 	}
-      else break;
-    }
 
-  sscanf( *charp, "%d", &value );
-  sprintf( tmp, "%d", value );
-  digit = strlen( tmp );
-  *charp += digit;
-  // skipping the pointer to the next digit
-  for(;;)
-    {
-      if (**charp==' ' || **charp=='\t' || **charp==',')
-	(*charp)++;
-      else break;
-    }
-  return value;
+	sscanf(*charp, "%d", &value);
+	sprintf(tmp, "%d", value);
+	digit = strlen(tmp);
+	*charp += digit;
+	// skipping the pointer to the next digit
+	for (;;)
+		{
+			if (**charp==' ' || **charp=='\t' || **charp==',')
+				(*charp)++;
+			else break;
+		}
+	return value;
 }
 
 
@@ -386,40 +379,40 @@ int sscanf_int_with_pointer_move (char **charp)
 /*-----------------------------------------------------------------------------------*/
 int sscanf_int_with_seeking( char **charp, int *result )
 {
-  int		value, digit;
-  int		debug=0;
-  char		tmp[32];
+	int		value, digit;
+	int		debug=0;
+	char		tmp[32];
 
-  if(debug) tl_message ("target string is <%s>", *charp);
-  for(;;)
-    {
-      if ((**charp==' ') || (**charp=='\t') || (**charp==','))
-	(*charp)++;
-      
-      else if ((**charp=='\0') || (**charp=='\n') || (**charp=='\r') )
-	return FALSE;
-      
-      else if (((**charp < '0') || (**charp > '9')) && (**charp!='-') )
-	{
-	  tl_warning ("Not space, Not digit <%c> is mingled!", **charp);
-	  (*charp)++;
-	}
-      else break;
-    }
+	if (debug) tl_message ("target string is <%s>", *charp);
+	for (;;)
+		{
+			if ((**charp==' ') || (**charp=='\t') || (**charp==','))
+				(*charp)++;
+			
+			else if ((**charp=='\0') || (**charp=='\n') || (**charp=='\r') )
+				return FALSE;
+			
+			else if (((**charp < '0') || (**charp > '9')) && (**charp!='-') )
+				{
+					tl_warning ("Not space, Not digit <%c> is mingled!", **charp);
+					(*charp)++;
+				}
+			else break;
+		}
 
-  sscanf( *charp, "%d", &value );
-  sprintf( tmp, "%d", value );
-  digit = strlen( tmp );
-  *charp += digit;
+	sscanf( *charp, "%d", &value );
+	sprintf( tmp, "%d", value );
+	digit = strlen( tmp );
+	*charp += digit;
 
-  for(;;)
-    {
-      if (**charp==' ' || **charp=='\t' || **charp==',') (*charp)++;
-      else break;
-    }
-  *result = value;
-  if(debug) tl_message ("result = %d", value);
-  return TRUE;
+	for (;;)
+		{
+			if (**charp==' ' || **charp=='\t' || **charp==',') (*charp)++;
+			else break;
+		}
+	*result = value;
+	if (debug) tl_message ("result = %d", value);
+	return TRUE;
 }
 
 
@@ -435,36 +428,36 @@ int sscanf_int_with_seeking( char **charp, int *result )
 /*-----------------------------------------------------------------------------------*/
 int sscanf_double_with_seeking (char **charp, double *data)
 {
-  float		value;
-  int		debug=0;
+	float	value;
+	int		debug=0;
 
-  if(debug) tl_message ("trying ... %s", *charp);
-  if( **charp=='\n' || **charp=='\r' || **charp=='\0' )
-    {
-      if(debug) tl_warning ("End of line. You had better using 'with_seeking'");
-      return FALSE;
-    }
-  // Moving the pointer of string in order to skip the digits
-  for(;;) {
-    if (**charp==' ' || **charp=='\t' || **charp==',') (*charp)++;
-    else break;
-  }
-  if( **charp=='\n' || **charp=='\r' || **charp=='\0' )
-    {
-      if(debug) tl_warning ("End of line. You had better using 'with_seeking'");
-      return FALSE;
-    }
-  // reading floating point value from a string got by fgets
-  sscanf (*charp, "%f", &value);
-  // Moving the pointer of string till it hit to digit, sign char or '.'
-  for(;;)
-    {
-      if( (**charp>='0' && **charp<='9') || **charp=='.' || **charp=='-')
-	(*charp)++;
-      else break;
-    }
-  *data = (double)value; 
-  return TRUE;
+	if (debug) tl_message ("trying ... %s", *charp);
+	if ( **charp=='\n' || **charp=='\r' || **charp=='\0' )
+		{
+			if (debug) tl_warning ("End of line. You had better using 'with_seeking'");
+			return FALSE;
+		}
+	// Moving the pointer of string in order to skip the digits
+	for (;;) {
+		if (**charp==' ' || **charp=='\t' || **charp==',') (*charp)++;
+		else break;
+	}
+	if ( **charp=='\n' || **charp=='\r' || **charp=='\0' )
+		{
+			if (debug) tl_warning ("End of line. You had better using 'with_seeking'");
+			return FALSE;
+		}
+	// reading floating point value from a string got by fgets
+	sscanf (*charp, "%f", &value);
+	// Moving the pointer of string till it hit to digit, sign char or '.'
+	for (;;)
+		{
+			if ( (**charp>='0' && **charp<='9') || **charp=='.' || **charp=='-')
+				(*charp)++;
+			else break;
+		}
+	*data = (double)value; 
+	return TRUE;
 }
 
 
@@ -479,27 +472,27 @@ int sscanf_double_with_seeking (char **charp, double *data)
 /*-----------------------------------------------------------------------------------*/
 double sscanf_double_with_pointer_move (char **charp)
 {
-  float		value;
+	float		value;
 
-  if (**charp=='\n' || **charp=='\r' || **charp=='\0' )
-    {
-      tl_warning ("End of line. You had better using 'with_seeking'");
-      return 0.0;
-    }
-  for(;;)
-    {
-      if (**charp==' ' || **charp=='\t' || **charp==',') (*charp)++;
-      else break;
-    }
-  sscanf( *charp, "%f", &value );
-
-  for(;;)
-    {
-      if (**charp!=' ' && **charp!='\t' && **charp!=',' && **charp!='\n' && **charp!='\0')
-	(*charp)++;
-      else break;
-    }
-  return (double)value;
+	if (**charp=='\n' || **charp=='\r' || **charp=='\0' )
+		{
+			tl_warning ("End of line. You had better using 'with_seeking'");
+			return 0.0;
+		}
+	for (;;)
+		{
+			if (**charp==' ' || **charp=='\t' || **charp==',') (*charp)++;
+			else break;
+		}
+	sscanf( *charp, "%f", &value );
+	
+	for (;;)
+		{
+			if (**charp!=' ' && **charp!='\t' && **charp!=',' && **charp!='\n' && **charp!='\0')
+				(*charp)++;
+			else break;
+		}
+	return (double)value;
 }
 
 
@@ -514,24 +507,22 @@ double sscanf_double_with_pointer_move (char **charp)
 /*-----------------------------------------------------------------------------------*/
 int sscanf_word_with_pointer_move (char **charp, char *word)
 {
-  if (**charp=='\0' || **charp=='\n' || **charp=='\r')
-    return FALSE;
+	if (**charp=='\0' || **charp=='\n' || **charp=='\r')
+		return FALSE;
 
-  for(;;)
-    {
-      if (**charp==' ' || **charp=='\t' || **charp==',')
-	{
-	  (*charp)++;
-	  if (**charp=='\0' || **charp=='\n' || **charp=='\r')
-	    return FALSE;
+	for (;;) {
+		if (**charp==' ' || **charp=='\t' || **charp==',') {
+			(*charp)++;
+			if (**charp=='\0' || **charp=='\n' || **charp=='\r')
+				return FALSE;
+		}
+		else break;
 	}
-      else break;
-    }
 
-  sscanf( *charp, "%s", word );
-
-  (*charp) += strlen( word );
-  return TRUE;
+	sscanf( *charp, "%s", word );
+	
+	(*charp) += strlen( word );
+	return TRUE;
 }
 
 
@@ -544,17 +535,15 @@ int sscanf_word_with_pointer_move (char **charp, char *word)
 /*-----------------------------------------------------------------------------------*/
 int tl_skip_pointer (char **charp)
 {
-  if (**charp=='\0' ) return FALSE;
+	if (**charp=='\0' ) return FALSE;
 
-  for(;;)
-    {
-      if (**charp==' ' || **charp=='\t' || **charp==',')
-	{
-	  (*charp)++;
-	  if (**charp=='\0' ) return FALSE;
+	for (;;) {
+		if (**charp==' ' || **charp=='\t' || **charp==',') {
+			(*charp)++;
+			if (**charp=='\0' ) return FALSE;
+		}
+		else return TRUE;
 	}
-      else return TRUE;
-    }
 }
 
 
@@ -567,12 +556,12 @@ int tl_skip_pointer (char **charp)
 /*-----------------------------------------------------------------------------------*/
 int remove_blacket_end( char *string )
 {
-  if (string[ strlen(string)-1 ] == ')')
-    {
-      string[ strlen(string)-1 ] = '\0';
-      return TRUE;
-    }
-  return FALSE;
+	if (string[ strlen(string)-1 ] == ')')
+		{
+			string[ strlen(string)-1 ] = '\0';
+			return TRUE;
+		}
+	return FALSE;
 }
 
 
@@ -585,30 +574,30 @@ int remove_blacket_end( char *string )
 /*-----------------------------------------------------------------------------------*/
 char *tl_pickup_last_filename (char *fullpath)
 {
-  int		i, debug=0;
-  char		*filename = NULL;
+	int		i, debug=0;
+	char	*filename = NULL;
 
-  if (fullpath[strlen(fullpath)-1] == '/' )
-    {
-      tl_warning ("this is directory name {%s}", fullpath);
-      return NULL;
-    }
-  // if '/' is not found, return without any modification
-  if (!tl_strmember (fullpath, "/"))
-    {
-      return fullpath;
-    }
-  for( i=strlen(fullpath); i>0; i-- )
-    {
-      if (fullpath[i] == '/') break;
-    }
-  filename = fullpath+i+1;
-  if(debug)
-    {
-      tl_message ("fullpath %s", fullpath);
-      tl_message ("filename %s", filename);
-    }
-  return filename;
+	if (fullpath[strlen(fullpath)-1] == '/' )
+		{
+			tl_warning ("this is directory name {%s}", fullpath);
+			return NULL;
+		}
+	// if '/' is not found, return without any modification
+	if (!tl_strmember (fullpath, "/"))
+		{
+			return fullpath;
+		}
+	for (i=strlen(fullpath); i>0; i--)
+		{
+			if (fullpath[i] == '/') break;
+		}
+	filename = fullpath+i+1;
+	if (debug)
+		{
+			tl_message ("fullpath %s", fullpath);
+			tl_message ("filename %s", filename);
+		}
+	return filename;
 }
 
 
@@ -621,41 +610,41 @@ char *tl_pickup_last_filename (char *fullpath)
 /*-----------------------------------------------------------------------------------*/
 int pickup_directory (char *fullpath, char *dir)
 {
-  int		i, flag=0, debug=0;
+	int		i, flag=0, debug=0;
 
-  tl_return_val_if_fail (fullpath, "string is NULL", FALSE);
+	tl_return_val_if_fail (fullpath, "string is NULL", FALSE);
   
-  // If '/' not found, current directory is output
-  for (i=strlen(fullpath); i>=0; i--)
-    if (fullpath[i]=='/') flag=1;
-  if (flag==0)
-    {
-      strcpy (dir, ".");
-      return TRUE;
-    }
+	// If '/' not found, current directory is output
+	for (i=strlen(fullpath); i>=0; i--)
+		if (fullpath[i]=='/') flag=1;
+	if (flag==0)
+		{
+			strcpy (dir, ".");
+			return TRUE;
+		}
 
-  // If the last char is '/', output without any modification
-  if (fullpath[strlen(fullpath)] == '/')
-    {
-      if(debug) tl_message ("%s", fullpath );
-      strcpy( dir, fullpath );
-      return TRUE;
-    }
+	// If the last char is '/', output without any modification
+	if (fullpath[strlen(fullpath)] == '/')
+		{
+			if (debug) tl_message ("%s", fullpath );
+			strcpy( dir, fullpath );
+			return TRUE;
+		}
 
-  for( i=strlen(fullpath); i>=3; i-- )
-    {
-      if (fullpath[i] == '/') break;
-      if (i==0) {
-	tl_warning ("Path name <%s> is too short", fullpath);
-	dir[0] = '\0';
-	return FALSE;
-      }
-    }
-  strncpy (dir, fullpath, i);
-  dir[i] = '\0';
-  if(debug) tl_message ( " <pickup_last_file> : fullpath  %s", fullpath);
-  if(debug) tl_message ( " <pickup_last_file> : directory %s", dir);
-  return TRUE;
+	for (i=strlen(fullpath); i>=3; i--)
+		{
+			if (fullpath[i] == '/') break;
+			if (i==0) {
+				tl_warning ("Path name <%s> is too short", fullpath);
+				dir[0] = '\0';
+				return FALSE;
+			}
+		}
+	strncpy (dir, fullpath, i);
+	dir[i] = '\0';
+	if (debug) tl_message ( " <pickup_last_file> : fullpath  %s", fullpath);
+	if (debug) tl_message ( " <pickup_last_file> : directory %s", dir);
+	return TRUE;
 }
 
 
@@ -668,25 +657,25 @@ int pickup_directory (char *fullpath, char *dir)
 /*---------------------------------------------------------------------------*/
 int tl_remove_suffix (GString *filename)
 {
-  int		i, debug=0;
+	int		i, debug=0;
 
-  tl_return_val_if_fail (filename, "filename is NULL", FALSE);
+	tl_return_val_if_fail (filename, "filename is NULL", FALSE);
 
-  if(debug) tl_message ("input  : %s", filename->str);
+	if (debug) tl_message ("input  : %s", filename->str);
 
-  for (i=filename->len; i>=1; i--)
-    {
-      if (filename->str[i] == '.' ) break;
-      if (i==1)
-	{
-	  tl_warning ("Too short !  Input string is {%s}", filename->str);
-	  return FALSE;
-	}
-    }
-  //filename[i] = '\0';
-  g_string_erase (filename, i, filename->len-i);
-  if(debug) tl_message ("output : %s", filename->str);
-  return TRUE;
+	for (i=filename->len; i>=1; i--)
+		{
+			if (filename->str[i] == '.' ) break;
+			if (i==1)
+				{
+					tl_warning ("Too short !  Input string is {%s}", filename->str);
+					return FALSE;
+				}
+		}
+	//filename[i] = '\0';
+	g_string_erase (filename, i, filename->len-i);
+	if (debug) tl_message ("output : %s", filename->str);
+	return TRUE;
 }
 
 
@@ -700,23 +689,23 @@ int tl_remove_suffix (GString *filename)
 /*---------------------------------------------------------------------------*/
 char *tl_pickup_terminal_filename (char *fullpath)
 {
-  int		i, debug=0;
+	int		i, debug=0;
 
-  if (fullpath[strlen(fullpath)-1] == '/')
-    {
-      tl_warning ("This is directory name. Input string is {%s}", fullpath);
-      return NULL;
-    }
-  for (i=strlen(fullpath)-1; i>0; i--)
-    {
-      if (fullpath[i] == '/' ) break;
-    }
-  if(debug)
-    {
-      tl_message ("fullpath %s", fullpath);
-      tl_message ("suffix   %s", fullpath+i+1);
-    }
-  return fullpath+i+1;
+	if (fullpath[strlen(fullpath)-1] == '/')
+		{
+			tl_warning ("This is directory name. Input string is {%s}", fullpath);
+			return NULL;
+		}
+	for (i=strlen(fullpath)-1; i>0; i--)
+		{
+			if (fullpath[i] == '/' ) break;
+		}
+	if (debug)
+		{
+			tl_message ("fullpath %s", fullpath);
+			tl_message ("suffix   %s", fullpath+i+1);
+		}
+	return fullpath+i+1;
 }
 
 
@@ -729,26 +718,26 @@ char *tl_pickup_terminal_filename (char *fullpath)
 /*-------------------------------------------------------------------------------------*/
 char *tl_get_suffix (char *filename)
 {
-  int		i;
-  int		debug=0;
+	int		i;
+	int		debug=0;
   
-  tl_return_val_if_fail (filename, "filename is NULL", NULL);
+	tl_return_val_if_fail (filename, "filename is NULL", NULL);
 
-  if (tl_strmember (filename, ".")==0)
-    return NULL;
+	if (tl_strmember (filename, ".")==0)
+		return NULL;
 
-  for (i=strlen(filename)-1; i>0; i--)
-    {
-      if (filename[i] == '/')
-	return NULL;			// If '/' is found without '.', report it as error
-      if (filename[i] == '.') break;
-    }
-  if(debug)
-    {
-      tl_message ("filename %s", filename);
-      tl_message ("suffix   %s", filename + i + 1);
-    }
-  return filename+i+1;
+	for (i=strlen(filename)-1; i>0; i--)
+		{
+			if (filename[i] == '/')
+				return NULL;			// If '/' is found without '.', report it as error
+			if (filename[i] == '.') break;
+		}
+	if (debug)
+		{
+			tl_message ("filename %s", filename);
+			tl_message ("suffix   %s", filename + i + 1);
+		}
+	return filename+i+1;
 }
 
 
@@ -763,33 +752,33 @@ char *tl_get_suffix (char *filename)
 /*---------------------------------------------------------------------------*/
 int tl_add_suffix (GString *filename, char *suffix)
 {
-  int		debug=0;
-  char		*suffix_p = NULL;
+	int		debug=0;
+	char		*suffix_p = NULL;
 
-  tl_return_val_if_fail (filename, "filename is NULL", FALSE);
-  tl_return_val_if_fail (suffix,   "suffix   is NULL", FALSE);
+	tl_return_val_if_fail (filename, "filename is NULL", FALSE);
+	tl_return_val_if_fail (suffix,   "suffix   is NULL", FALSE);
 
-  suffix_p = tl_get_suffix (filename->str);
-  if(debug) tl_message ("input filename  : %s", filename->str);
-  if(debug) tl_message ("suffix of input : %s", suffix_p);
+	suffix_p = tl_get_suffix (filename->str);
+	if (debug) tl_message ("input filename  : %s", filename->str);
+	if (debug) tl_message ("suffix of input : %s", suffix_p);
 
-  if (suffix_p==NULL)
-    {
-      // In case that suffix is not found in input file
-      if(debug) tl_message ("suffix of desired : %s", suffix);
-      g_string_append (filename, ".");
-      g_string_append (filename, suffix);
-    }
-  else if (strcmp (suffix, suffix_p))
-    {
-      // In case that suffix is not the same
-      if(debug) tl_message ("suffix of desired : %s", suffix);
-      g_string_append (filename, ".");
-      g_string_append (filename, suffix);
-    }
+	if (suffix_p==NULL)
+		{
+			// In case that suffix is not found in input file
+			if (debug) tl_message ("suffix of desired : %s", suffix);
+			g_string_append (filename, ".");
+			g_string_append (filename, suffix);
+		}
+	else if (strcmp (suffix, suffix_p))
+		{
+			// In case that suffix is not the same
+			if (debug) tl_message ("suffix of desired : %s", suffix);
+			g_string_append (filename, ".");
+			g_string_append (filename, suffix);
+		}
 
-  if(debug) tl_message ("file result is : %s", filename->str);
-  return TRUE;
+	if (debug) tl_message ("file result is : %s", filename->str);
+	return TRUE;
 }
 
 
@@ -805,23 +794,23 @@ int tl_add_suffix (GString *filename, char *suffix)
 /*-----------------------------------------------------------------------------------*/
 int max_between (int num, int *buf)
 {
-  int		min_value, max_value, max_no;
-  int		i;
+	int		min_value, max_value, max_no;
+	int		i;
 
-  max_value = buf[0];
-  min_value = buf[0];
-  max_no    = 0;
+	max_value = buf[0];
+	min_value = buf[0];
+	max_no    = 0;
   
-  for( i=0; i<num; i++ ) {
-    if (max_value < buf[i] ) {
-      max_value = buf[i];
-      max_no    = i;
-    }
-    if (min_value > buf[i] )
-      min_value = buf[i];
-  }
-  if (min_value==max_value ) return -1;
-  return max_no;
+	for (i=0; i<num; i++) {
+		if (max_value < buf[i] ) {
+			max_value = buf[i];
+			max_no    = i;
+		}
+		if (min_value > buf[i] )
+			min_value = buf[i];
+	}
+	if (min_value==max_value ) return -1;
+	return max_no;
 }
 
 
@@ -830,19 +819,19 @@ int max_between (int num, int *buf)
 /*-----------------------------------------------------------------------------------*/
 int max_between (vector<double> vec)
 {
-  double	max_value;
-  int		max_no = 0;
+	double	max_value;
+	int		max_no = 0;
 
-  max_value = vec[0];
-  for (int i=0; i<(int)vec.size(); i++)
-    {
-      if (max_value < vec[i])
-	{
-	  max_value = vec[i];
-	  max_no    = i;
-	}
-    }
-  return max_no;
+	max_value = vec[0];
+	for (int i=0; i<(int)vec.size(); i++)
+		{
+			if (max_value < vec[i])
+				{
+					max_value = vec[i];
+					max_no    = i;
+				}
+		}
+	return max_no;
 }
 
 
@@ -855,19 +844,19 @@ int max_between (vector<double> vec)
 /*-----------------------------------------------------------------------------------*/
 int min_between( int num, int *buf )
 {
-  int		min_value, min_no;
-  int		i;
+	int		min_value, min_no;
+	int		i;
 
-  min_value = buf[0];
-  min_no    = 0;
+	min_value = buf[0];
+	min_no    = 0;
   
-  for( i=0; i<num; i++ ) {
-    if (min_value > buf[i] ) {
-      min_value = buf[i];
-      min_no    = i;
-    }
-  }
-  return min_no;
+	for (i=0; i<num; i++) {
+		if (min_value > buf[i] ) {
+			min_value = buf[i];
+			min_no    = i;
+		}
+	}
+	return min_no;
 }
 
 
@@ -880,21 +869,21 @@ int min_between( int num, int *buf )
 /*-----------------------------------------------------------------------------------*/
 int min_natural_number_between (int num, int *buf)
 {
-  int		min_value, min_no;
-  int		i, flag=0;
+	int		min_value, min_no;
+	int		i, flag=0;
 
-  min_value = 99999;
-  min_no    = 0;
+	min_value = 99999;
+	min_no    = 0;
   
-  for( i=0; i<num; i++ ) {
-    if (min_value > buf[i] && buf[i]>0 ) {
-      min_value = buf[i];
-      min_no    = i;
-      flag = 1;
-    }
-  }
-  if (flag==1 ) return min_no;
-  else return -1;
+	for (i=0; i<num; i++) {
+		if (min_value > buf[i] && buf[i]>0 ) {
+			min_value = buf[i];
+			min_no    = i;
+			flag = 1;
+		}
+	}
+	if (flag==1 ) return min_no;
+	else return -1;
 }
 
 
@@ -904,14 +893,14 @@ int min_natural_number_between (int num, int *buf)
 /*-----------------------------------------------------------------------------------*/
 static void bubble_swap (bubble_data *a, bubble_data *b)
 {
-  bubble_data t;
+	bubble_data t;
 
-  t.key   = a->key;
-  t.info  = a->info;
-  a->key  = b->key;
-  a->info = b->info;
-  b->key  = t.key;
-  b->info = t.info;
+	t.key   = a->key;
+	t.info  = a->info;
+	a->key  = b->key;
+	a->info = b->info;
+	b->key  = t.key;
+	b->info = t.info;
 }
 
 
@@ -925,19 +914,19 @@ static void bubble_swap (bubble_data *a, bubble_data *b)
 /*-----------------------------------------------------------------------------------*/
 int bubbleSort(bubble_data *data, int nmem, int asdes)
 {
-  int i, j;
+	int i, j;
 
-  for (i = 0; i < nmem - 1; i++) {
-    for (j = nmem - 1; j >= i + 1; j--)
-      if (asdes == 0) {
-	if (data[j].key < data[j-1].key)
-	  bubble_swap(&data[j], &data[j-1]);
-      } else {
-	if (data[j].key > data[j-1].key)
-	  bubble_swap(&data[j], &data[j-1]);
-      }
-  }
-  return TRUE;
+	for (i = 0; i < nmem - 1; i++) {
+		for (j = nmem - 1; j >= i + 1; j--)
+			if (asdes == 0) {
+				if (data[j].key < data[j-1].key)
+					bubble_swap(&data[j], &data[j-1]);
+			} else {
+				if (data[j].key > data[j-1].key)
+					bubble_swap(&data[j], &data[j-1]);
+			}
+	}
+	return TRUE;
 }
       
 /*-----------------------------------------------------------------------------------*/
@@ -951,25 +940,25 @@ int bubbleSort(bubble_data *data, int nmem, int asdes)
 /*-----------------------------------------------------------------------------------*/
 int tl_search_1st_2nd (int num, double *buf, int *first_no, double *first_value, int *second_no, double *second_value)
 {
-  int		i;
-  bubble_data	*sequence;
+	int		i;
+	bubble_data	*sequence;
 
-  tl_return_val_if_fail (buf, "buffer is NULL", FALSE);
+	tl_return_val_if_fail (buf, "buffer is NULL", FALSE);
 
-  sequence = (bubble_data *)malloc (sizeof(bubble_data) * num);
+	sequence = (bubble_data *)malloc (sizeof(bubble_data) * num);
 
-  for( i=0; i<num; i++ ) {
-    sequence[i].key  = buf[i];
-    sequence[i].info = i;
-  }
-  bubbleSort (sequence, num, 1);
-  *first_value  = sequence[0].key;
-  *first_no     = sequence[0].info;
-  *second_value = sequence[1].key;
-  *second_no    = sequence[1].info;
+	for (i=0; i<num; i++) {
+		sequence[i].key  = buf[i];
+		sequence[i].info = i;
+	}
+	bubbleSort (sequence, num, 1);
+	*first_value  = sequence[0].key;
+	*first_no     = sequence[0].info;
+	*second_value = sequence[1].key;
+	*second_no    = sequence[1].info;
 
-  free (sequence);
-  return TRUE;
+	free (sequence);
+	return TRUE;
 }
 
 
@@ -978,26 +967,26 @@ int tl_search_1st_2nd (int num, double *buf, int *first_no, double *first_value,
 /*-----------------------------------------------------------------------------------*/
 int pointer_swap_void (void **p1, void **p2)
 {
-  int		debug=0;
-  void		*tmp=NULL;
+	int		debug=0;
+	void		*tmp=NULL;
 
-  if(debug) tl_message ("p1 : %p\t\tp2 : %p", *p1, *p2);
-  tmp  = *p2;
-  *p2  = *p1;
-  *p1  = tmp;
-  if(debug) tl_message ("p1 : %p\t\tp2 : %p", *p1, *p2);
-  return TRUE;
+	if (debug) tl_message ("p1 : %p\t\tp2 : %p", *p1, *p2);
+	tmp  = *p2;
+	*p2  = *p1;
+	*p1  = tmp;
+	if (debug) tl_message ("p1 : %p\t\tp2 : %p", *p1, *p2);
+	return TRUE;
 }
 
 
 int pointer_swap( int *p1, int *p2 )
 {
-  int		tmp;
+	int		tmp;
 
-  tmp = *p2;
-  *p2 = *p1;
-  *p1 = tmp;
-  return TRUE;
+	tmp = *p2;
+	*p2 = *p1;
+	*p1 = tmp;
+	return TRUE;
 }
 
 
@@ -1012,15 +1001,15 @@ int pointer_swap( int *p1, int *p2 )
 /*-----------------------------------------------------------------------------------*/
 void normalize_vector (int dim, double *src_vec, double *dst_vec)
 {
-  double		sum=0.0;
-  int			i;
+	double		sum=0.0;
+	int			i;
 
-  for( i=0; i<dim; i++ )
-    sum += src_vec[i];
-  if (sum < 0.00001 )
-    for( i=0; i<dim; i++ )  dst_vec[i] = 0.0;
-  else
-    for( i=0; i<dim; i++ )  dst_vec[i] = src_vec[i] / sum;
+	for (i=0; i<dim; i++)
+		sum += src_vec[i];
+	if (sum < 0.00001 )
+		for (i=0; i<dim; i++)  dst_vec[i] = 0.0;
+	else
+		for (i=0; i<dim; i++)  dst_vec[i] = src_vec[i] / sum;
 }
 
 
@@ -1035,24 +1024,24 @@ void normalize_vector (int dim, double *src_vec, double *dst_vec)
 /*---------------------------------------------------------------------------*/
 char *tl_fgets_without_sharp (char *str, int n, FILE *fp)
 {
-  char	tmp[MAX_STRING];
-  int	end_flag=0;
+	char	tmp[MAX_STRING];
+	int	end_flag=0;
 
-  if (n>MAX_STRING)
-    {
-      tl_warning ("size %d is larger than %d", n, MAX_STRING);
-      return NULL;
-    }
-  do {
-    if (fgets( tmp, n, fp )==NULL ) return NULL;
-    if (tmp[0]=='#' || tmp[0]=='\n' || tmp[0]=='\r')
-      end_flag = 0;
-    else
-      end_flag = 1;
-  }
-  while (end_flag != 1);
-  strcpy( str, tmp );
-  return str;
+	if (n>MAX_STRING)
+		{
+			tl_warning ("size %d is larger than %d", n, MAX_STRING);
+			return NULL;
+		}
+	do {
+		if (fgets( tmp, n, fp )==NULL ) return NULL;
+		if (tmp[0]=='#' || tmp[0]=='\n' || tmp[0]=='\r')
+			end_flag = 0;
+		else
+			end_flag = 1;
+	}
+	while (end_flag != 1);
+	strcpy( str, tmp );
+	return str;
 }
 
 
@@ -1064,13 +1053,13 @@ char *tl_fgets_without_sharp (char *str, int n, FILE *fp)
 /*-----------------------------------------------------------------------------------*/
 int string_count( char *string, char c )
 {
-  int	i, n=0;
+	int	i, n=0;
 
-  for (i=0; i<(int)(strlen(string)); i++)
-    {
-      if (string[i]==c) n++;
-    }
-  return n;
+	for (i=0; i<(int)(strlen(string)); i++)
+		{
+			if (string[i]==c) n++;
+		}
+	return n;
 }
 
 
@@ -1081,14 +1070,14 @@ int string_count( char *string, char c )
 /*-----------------------------------------------------------------------------------*/
 int integerp (char *string)
 {
-  int		i;
+	int		i;
 
-  for (i=0; i<(int)(strlen(string)); i++)
-    {
-      if (string[i]<'0' || string[i]>'9' )
-	if (string[i]!='-' ) return FALSE;
-    }
-  return TRUE;
+	for (i=0; i<(int)(strlen(string)); i++)
+		{
+			if (string[i]<'0' || string[i]>'9' )
+				if (string[i]!='-' ) return FALSE;
+		}
+	return TRUE;
 }
 
 
@@ -1101,13 +1090,13 @@ int integerp (char *string)
 /*-----------------------------------------------------------------------------------*/
 int tl_atoi (char *string, int *value)
 {
-  if (integerp(string)==FALSE)
-    {
-      tl_message ("input string is not integer! : %s", string );
-      return FALSE;
-    }
-  *value = atoi(string);
-  return TRUE;
+	if (integerp(string)==FALSE)
+		{
+			tl_message ("input string is not integer! : %s", string );
+			return FALSE;
+		}
+	*value = atoi(string);
+	return TRUE;
 }
 
 
@@ -1119,24 +1108,24 @@ int tl_atoi (char *string, int *value)
 /*-----------------------------------------------------------------------------------*/
 int exec_functable (functable_t *ft, char *string)
 {
-  int		i, debug=0;
+	int		i, debug=0;
 
-  if(debug) tl_message( "Start : str={%s}", string );
-  for(i=0;;i++)
-    {
-      if(debug) tl_message( "Check func name {%s}", ft[i].name );
-      if (tl_strmember( string, ft[i].name ))
-	{
-	  if(debug) tl_message( "Hit function name %s", ft[i].name );
-	  (ft[i].func)(string);
-	  return TRUE;
-	}
-      else if (!strcmp( "FUNCEND", ft[i].name ) )
-	{
-	  tl_warning ("No such command {%s}", string);
-	  return FALSE;
-	}
-    }
+	if (debug) tl_message( "Start : str={%s}", string );
+	for (i=0;;i++)
+		{
+			if (debug) tl_message( "Check func name {%s}", ft[i].name );
+			if (tl_strmember( string, ft[i].name ))
+				{
+					if (debug) tl_message( "Hit function name %s", ft[i].name );
+					(ft[i].func)(string);
+					return TRUE;
+				}
+			else if (!strcmp( "FUNCEND", ft[i].name ) )
+				{
+					tl_warning ("No such command {%s}", string);
+					return FALSE;
+				}
+		}
 }
 
 
@@ -1146,24 +1135,24 @@ int exec_functable (functable_t *ft, char *string)
 /*-----------------------------------------------------------------------------------*/
 int exec_functable_with_int (functable_with_int_t *ft, char *string, int value)
 {
-  int		i, debug=0;
+	int		i, debug=0;
 
-  if(debug) tl_message("Start : str={%s}", string);
-  for(i=0;;i++)
-    {
-      if(debug) tl_message ("Check func name {%s}", ft[i].name );
-      if (tl_strmember( string, ft[i].name ))
-	{
-	  if(debug) tl_message ("Hit function name <%s>", ft[i].name );
-	  (ft[i].func)(string, value);
-	  return TRUE;
-	}
-      else if (!strcmp( "FUNCEND", ft[i].name ) )
-	{
-	  tl_warning ("No such command {%s}", string );
-	  return FALSE;
-	}
-    }
+	if (debug) tl_message("Start : str={%s}", string);
+	for (i=0;;i++)
+		{
+			if (debug) tl_message ("Check func name {%s}", ft[i].name );
+			if (tl_strmember( string, ft[i].name ))
+				{
+					if (debug) tl_message ("Hit function name <%s>", ft[i].name );
+					(ft[i].func)(string, value);
+					return TRUE;
+				}
+			else if (!strcmp( "FUNCEND", ft[i].name ) )
+				{
+					tl_warning ("No such command {%s}", string );
+					return FALSE;
+				}
+		}
 }
 
 
@@ -1175,24 +1164,24 @@ int exec_functable_with_int (functable_with_int_t *ft, char *string, int value)
 /*-----------------------------------------------------------------------------------*/
 int exec_functable_with_name( functable_with_arg_t *ft, char *string, char *name )
 {
-  int		i, debug=0;
+	int		i, debug=0;
 
-  if(debug) tl_message ("Start : str={%s}", string );
-  for(i=0;;i++) {
-    if(debug) tl_message ("Check func name {%s}", ft[i].name );
-    if (tl_strmember( string, ft[i].name ))
-      {
-	if(debug) tl_message ("Hit function name %s", ft[i].name);
-	(ft[i].func)(string);
-	return TRUE;
-      }
-    else if (!strcmp( "FUNCEND", ft[i].name ) )
-      {
-	tl_warning ("exec_functable");
-	tl_message ("<%s> No such command {%s}", name, string );
-	return FALSE;
-      }
-  }
+	if (debug) tl_message ("Start : str={%s}", string );
+	for (i=0;;i++) {
+		if (debug) tl_message ("Check func name {%s}", ft[i].name );
+		if (tl_strmember( string, ft[i].name ))
+			{
+				if (debug) tl_message ("Hit function name %s", ft[i].name);
+				(ft[i].func)(string);
+				return TRUE;
+			}
+		else if (!strcmp( "FUNCEND", ft[i].name ) )
+			{
+				tl_warning ("exec_functable");
+				tl_message ("<%s> No such command {%s}", name, string );
+				return FALSE;
+			}
+	}
 }
 
 
@@ -1206,24 +1195,24 @@ int exec_functable_with_name( functable_with_arg_t *ft, char *string, char *name
 /*-----------------------------------------------------------------------------------*/
 int exec_functable_with_2arg( functable_with_2arg_t *ft, char *string, void *arg )
 {
-  int		i, debug=0;
+	int		i, debug=0;
 
-  if(debug) tl_message ("Start : str={%s}", string );
-  for(i=0;;i++) {
-    if(debug) tl_message ("Check func name {%s}", ft[i].name);
-    if (tl_strmember( string, ft[i].name ))
-      {
-	if(debug) tl_message ("Hit function name %s", ft[i].name );
-	(ft[i].func)(string, arg);
-	return TRUE;
-      }
-    else if (!strcmp( "FUNCEND", ft[i].name ) )
-      {
-	tl_warning ("exec_functable");
-	tl_message ("No such command {%s}", string);
-	return FALSE;
-      }
-  }
+	if (debug) tl_message ("Start : str={%s}", string );
+	for (i=0;;i++) {
+		if (debug) tl_message ("Check func name {%s}", ft[i].name);
+		if (tl_strmember( string, ft[i].name ))
+			{
+				if (debug) tl_message ("Hit function name %s", ft[i].name );
+				(ft[i].func)(string, arg);
+				return TRUE;
+			}
+		else if (!strcmp( "FUNCEND", ft[i].name ) )
+			{
+				tl_warning ("exec_functable");
+				tl_message ("No such command {%s}", string);
+				return FALSE;
+			}
+	}
 }
 
 
@@ -1238,29 +1227,28 @@ int exec_functable_with_2arg( functable_with_2arg_t *ft, char *string, void *arg
 /*-----------------------------------------------------------------------------------*/
 int expand_list_to_int (char *list, int *length, int *data)
 {
-  int		i, ret, value;
-  char		*charp;
+	int		i, ret, value;
+	char		*charp;
   
-  charp = list;
-  if (list[0]=='(' )
-    charp += 1;
+	charp = list;
+	if (list[0]=='(' )
+		charp += 1;
 
-  for( i=0; ;i++ )
-    {
-      if ( (*charp==')') || (*charp=='\0') || (*charp=='\n') )
-	{
-	  *length = i;
-	  return TRUE;
+	for (i=0; ;i++)	{
+		if ( (*charp==')') || (*charp=='\0') || (*charp=='\n') )
+			{
+				*length = i;
+				return TRUE;
+			}
+		ret = sscanf_int_with_seeking (&charp, &value);
+		if (ret==FALSE )
+			{
+				*length = i;
+				return FALSE;
+			}
+		data[i] = value;
 	}
-      ret = sscanf_int_with_seeking (&charp, &value);
-      if (ret==FALSE )
-	{
-	  *length = i;
-	  return FALSE;
-	}
-      data[i] = value;
-    }
-  return FALSE;
+	return FALSE;
 }
 
 
@@ -1274,30 +1262,29 @@ int expand_list_to_int (char *list, int *length, int *data)
 /*-----------------------------------------------------------------------------------*/
 int expand_list_to_double (char *list, int *length, double *data)
 {
-  int		i, ret;
-  char		*charp;
-  double	value;
+	int		i, ret;
+	char		*charp;
+	double	value;
   
-  charp = list;
-  if (list[0]=='(' )
-    charp += 1;
+	charp = list;
+	if (list[0]=='(')
+		charp += 1;
 
-  for( i=0; ;i++ )
-    {
-      if ( (*charp==')') || (*charp=='\0') || (*charp=='\n') )
-	{
-	  *length = i;
-	  return TRUE;
+	for (i=0; ;i++)	{
+		if ( (*charp==')') || (*charp=='\0') || (*charp=='\n') )
+			{
+				*length = i;
+				return TRUE;
+			}
+		ret = sscanf_double_with_seeking (&charp, &value);
+		if (ret==FALSE )
+			{
+				*length = i;
+				return FALSE;
+			}
+		data[i] = value;
 	}
-      ret = sscanf_double_with_seeking (&charp, &value);
-      if (ret==FALSE )
-	{
-	  *length = i;
-	  return FALSE;
-	}
-      data[i] = value;
-    }
-  return FALSE;
+	return FALSE;
 }
 
 
@@ -1312,44 +1299,43 @@ int expand_list_to_double (char *list, int *length, double *data)
 /*---------------------------------------------------------------------------*/
 char **expand_list_to_word (char *list, int *length)
 {
-  int		i, size, ret, debug=0;
-  char		*charp, word[MAX_STRING], **result;
+	int		i, size, ret, debug=0;
+	char		*charp, word[MAX_STRING], **result;
   
-  if (list[0]!='(') {
-    tl_warning ("expand_list_to_word");
-    tl_message ("This is not list");
-    return NULL;
-  }
-  if(debug) tl_message ("Start!");
+	if (list[0]!='(') {
+		tl_warning ("expand_list_to_word");
+		tl_message ("This is not list");
+		return NULL;
+	}
+	if (debug) tl_message ("Start!");
 
-  charp = list+1;
+	charp = list+1;
 
-  for( size=0; ; )
-    {
-      if (*charp==')' ) break;
-      ret = sscanf_word_with_pointer_move( &charp, word );
-      if (ret==FALSE )      break;
-      size++;
-      if (tl_strmember(word, ")") ) break;
-    }
-  // create word element x the number of element
-  if(debug) tl_message ("There is %d words", size);
-  *length = size;
-  result = (char **)malloc( sizeof(char *) * size);
-  for( i=0; i<size; i++ )
-    result[i] = (char *)malloc(MAX_STRING);
+	for (size=0; ;)	{
+		if (*charp==')' ) break;
+		ret = sscanf_word_with_pointer_move( &charp, word );
+		if (ret==FALSE )      break;
+		size++;
+		if (tl_strmember(word, ")") ) break;
+	}
+	// create word element x the number of element
+	if (debug) tl_message ("There is %d words", size);
+	*length = size;
+	result = (char **)malloc( sizeof(char *) * size);
+	for (i=0; i<size; i++)
+		result[i] = (char *)malloc(MAX_STRING);
   
-  charp = list+1;
-  if(debug) tl_message ("Going to Step 2");
-  for (i=0; i<size; i++)
-    {
-      sscanf_word_with_pointer_move (&charp, word);
-      remove_blacket_end( word );
-      if(debug) tl_message ("Now strcpy {%s}!", word);
-      strcpy (result[i], word);
-      if(debug) tl_message ("End of strcpy {%s}!", result[i]);
-    }
-  return result;
+	charp = list+1;
+	if (debug) tl_message ("Going to Step 2");
+	for (i=0; i<size; i++)
+		{
+			sscanf_word_with_pointer_move (&charp, word);
+			remove_blacket_end( word );
+			if (debug) tl_message ("Now strcpy {%s}!", word);
+			strcpy (result[i], word);
+			if (debug) tl_message ("End of strcpy {%s}!", result[i]);
+		}
+	return result;
 }
 
 
@@ -1362,29 +1348,29 @@ char **expand_list_to_word (char *list, int *length)
 /*-----------------------------------------------------------------------------------*/
 GList *tl_list_string_to_glist (char *str)
 {
-  int		size, ret, debug=0;
-  char		*charp, *word, buf[MAX_STRING];
-  GList		*glist=NULL;
+	int		size, ret, debug=0;
+	char		*charp, *word, buf[MAX_STRING];
+	GList		*glist=NULL;
 
-  if(debug) tl_message ("Src = {%s}", str);
-  g_return_val_if_fail (str != NULL, NULL);
-  g_return_val_if_fail (str[0] == '(', NULL);
+	if (debug) tl_message ("Src = {%s}", str);
+	g_return_val_if_fail (str != NULL, NULL);
+	g_return_val_if_fail (str[0] == '(', NULL);
 
-  charp = str+1;
+	charp = str+1;
   
-  for (size=0; ;)
-    {
-      if (*charp==')' ) break;
-      ret = sscanf_word_with_pointer_move( &charp, buf );
-      if (ret==FALSE )      break;
-      if (buf[strlen(buf)-1]==')' ) buf[strlen(buf)-1] = '\0';
-      size++;
-      if(debug) tl_message("Expansion : %s", buf);
-      word = g_strdup (buf);
-      glist = g_list_append( glist, word );
-      if (tl_strmember(word, ")") ) break;
-    }
-  return glist;
+	for (size=0; ;)
+		{
+			if (*charp==')' ) break;
+			ret = sscanf_word_with_pointer_move( &charp, buf );
+			if (ret==FALSE )      break;
+			if (buf[strlen(buf)-1]==')' ) buf[strlen(buf)-1] = '\0';
+			size++;
+			if (debug) tl_message("Expansion : %s", buf);
+			word = g_strdup (buf);
+			glist = g_list_append( glist, word );
+			if (tl_strmember(word, ")") ) break;
+		}
+	return glist;
 }
 
 
@@ -1397,30 +1383,30 @@ GList *tl_list_string_to_glist (char *str)
 /*-----------------------------------------------------------------------------------*/
 GList *tl_csv_to_glist (char *str)
 {
-  int		num, debug=0;
-  char		*charp, *word;
-  gchar		**result;
-  GList		*glist=NULL;
+	int		num, debug=0;
+	char		*charp, *word;
+	gchar		**result;
+	GList		*glist=NULL;
 
-  if(debug) tl_message ("Src = {%s}", str);
-  g_return_val_if_fail (str != NULL, NULL);
+	if (debug) tl_message ("Src = {%s}", str);
+	g_return_val_if_fail (str != NULL, NULL);
 
-  charp = str;
-  num = string_count (str, ',') + 1;
-  result = g_strsplit (str, ",", 0);
-  if(debug) cerr << "number of factor = " << num << endl;
+	charp = str;
+	num = string_count (str, ',') + 1;
+	result = g_strsplit (str, ",", 0);
+	if (debug) cerr << "number of factor = " << num << endl;
   
-  for (int i=0; i<num; i++)
-    {
-      if(debug) tl_message ("step %d-1: result[%d] = %s", i, i, result[i]);
-      word = g_strdup (result[i]);
-      //strcpy (word, result[i]);
-      if(debug) tl_message ("step %d-2: add %s into glist", i, (char *)word);
-      glist = g_list_append (glist, word);
-      //g_list_append (glist, word);
-      if(debug) tl_message ("step %d-3: length = %d: contents %s", i, (int)g_list_length(glist), (char *)g_list_nth_data(glist, i));
-    }
-  return glist;
+	for (int i=0; i<num; i++)
+		{
+			if (debug) tl_message ("step %d-1: result[%d] = %s", i, i, result[i]);
+			word = g_strdup (result[i]);
+			//strcpy (word, result[i]);
+			if (debug) tl_message ("step %d-2: add %s into glist", i, (char *)word);
+			glist = g_list_append (glist, word);
+			//g_list_append (glist, word);
+			if (debug) tl_message ("step %d-3: length = %d: contents %s", i, (int)g_list_length(glist), (char *)g_list_nth_data(glist, i));
+		}
+	return glist;
 }
 
 
@@ -1432,32 +1418,32 @@ GList *tl_csv_to_glist (char *str)
 /*-----------------------------------------------------------------------------------*/
 GList *tl_word_array_to_glist (char *str, char elim)
 {
-  int		num, debug=0;
-  char		*charp, *word, eliminator[2];
-  gchar		**result;
-  GList		*glist=NULL;
+	int		num, debug=0;
+	char		*charp, *word, eliminator[2];
+	gchar		**result;
+	GList		*glist=NULL;
 
-  if(debug) tl_message ("Src = {%s}", str);
-  g_return_val_if_fail (str != NULL, NULL);
+	if (debug) tl_message ("Src = {%s}", str);
+	g_return_val_if_fail (str != NULL, NULL);
 
-  eliminator[0] = elim;	eliminator[1] = '\0';
+	eliminator[0] = elim;	eliminator[1] = '\0';
   
-  charp = str;
-  num = string_count (str, eliminator[0]) + 1;
-  result = g_strsplit (str, eliminator, 0);
-  if(debug) cerr << "number of factor = " << num << endl;
+	charp = str;
+	num = string_count (str, eliminator[0]) + 1;
+	result = g_strsplit (str, eliminator, 0);
+	if (debug) cerr << "number of factor = " << num << endl;
   
-  for (int i=0; i<num; i++)
-    {
-      if(debug) tl_message ("step %d-1: result[%d] = %s", i, i, result[i]);
-      word = g_strdup (result[i]);
-      //strcpy (word, result[i]);
-      if(debug) tl_message ("step %d-2: add %s into glist", i, (char *)word);
-      glist = g_list_append (glist, word);
-      //g_list_append (glist, word);
-      if(debug) tl_message ("step %d-3: length = %d: contents %s", i, (int)g_list_length(glist), (char *)g_list_nth_data(glist, i));
-    }
-  return glist;
+	for (int i=0; i<num; i++)
+		{
+			if (debug) tl_message ("step %d-1: result[%d] = %s", i, i, result[i]);
+			word = g_strdup (result[i]);
+			//strcpy (word, result[i]);
+			if (debug) tl_message ("step %d-2: add %s into glist", i, (char *)word);
+			glist = g_list_append (glist, word);
+			//g_list_append (glist, word);
+			if (debug) tl_message ("step %d-3: length = %d: contents %s", i, (int)g_list_length(glist), (char *)g_list_nth_data(glist, i));
+		}
+	return glist;
 }
 
 
@@ -1470,22 +1456,22 @@ GList *tl_word_array_to_glist (char *str, char elim)
 /*-----------------------------------------------------------------------------------*/
 int tl_glist_get_keyword (GList *list, char *keyword, char *result)
 {
-  int		i;
-  GList		*key_list=NULL, *target_list=NULL;
+	int		i;
+	GList		*key_list=NULL, *target_list=NULL;
 
-  for (i=0; i<(int)(g_list_length(list)); i++ )
-    {
-      if (tl_strmember( (char *)(g_list_nth( list, i )->data), keyword ))
-	key_list = g_list_nth( list, i );
-    }
-  target_list = g_list_next (key_list);
+	for (i=0; i<(int)(g_list_length(list)); i++)
+		{
+			if (tl_strmember( (char *)(g_list_nth( list, i )->data), keyword ))
+				key_list = g_list_nth( list, i );
+		}
+	target_list = g_list_next (key_list);
 
-  if (target_list==NULL) {
-    result = NULL;
-    return FALSE;
-  }
-  strcpy (result, (char *)(target_list->data));
-  return TRUE;
+	if (target_list==NULL) {
+		result = NULL;
+		return FALSE;
+	}
+	strcpy (result, (char *)(target_list->data));
+	return TRUE;
 }
 
 
@@ -1493,18 +1479,18 @@ int tl_glist_get_keyword (GList *list, char *keyword, char *result)
 // Added : 1999 Aug 20th
 int tl_glist_print (GList *list)
 {
-  int		i;
-  int		debug=0;
+	int		i;
+	int		debug=0;
 
-  tl_return_val_if_fail (list, "list pointer is NULL", FALSE);
+	tl_return_val_if_fail (list, "list pointer is NULL", FALSE);
 
-  if(debug) tl_message ("start");
-  cerr << "List = (";
+	if (debug) tl_message ("start");
+	cerr << "List = (";
 
-  for (i=0; i<(int)(g_list_length(list)); i++)
-    cerr << g_list_nth( list, i )->data;
-  cerr << endl;
-  return TRUE;
+	for (i=0; i<(int)(g_list_length(list)); i++)
+		cerr << g_list_nth( list, i )->data;
+	cerr << endl;
+	return TRUE;
 }
 
 
@@ -1516,11 +1502,11 @@ int tl_glist_print (GList *list)
 /*-----------------------------------------------------------------------------------*/
 int tl_random_seed (int seed)
 {
-  if (seed)
-    srand (seed);
-  else
-    srand (getpid());
-  return TRUE;
+	if (seed)
+		srand (seed);
+	else
+		srand (getpid());
+	return TRUE;
 }
 
 		    
@@ -1533,10 +1519,10 @@ int tl_random_seed (int seed)
 /*-----------------------------------------------------------------------------------*/
 double tl_random (int upper)
 {
-  double	result;
+	double	result;
   
-  result = ((double)upper*rand()/(RAND_MAX+1.0));
-  return result;
+	result = ((double)upper*rand()/(RAND_MAX+1.0));
+	return result;
 }
 
 
@@ -1545,12 +1531,12 @@ double tl_random (int upper)
 /*----------------------------------------------------------------------------*/
 int tlVector_SetValue (tlVector_t *vec, double *seq, int size)
 {
-  int		i;
+	int		i;
   
-  for (i=0; i<size; i++)
-    g_array_append_val ((GArray *)vec, seq[i]);
+	for (i=0; i<size; i++)
+		g_array_append_val ((GArray *)vec, seq[i]);
   
-  return TRUE;
+	return TRUE;
 }
 
 
@@ -1561,14 +1547,14 @@ int tlVector_SetValue (tlVector_t *vec, double *seq, int size)
 /*----------------------------------------------------------------------------*/
 int tlVector_CopyToIntPointer (tlVector_t *vec, int *seq)
 {
-  int		i;
+	int		i;
   
-  tl_return_val_if_fail (vec, "vec is NULL", FALSE);
+	tl_return_val_if_fail (vec, "vec is NULL", FALSE);
 
-  for (i=0; i<tlVector_Size (vec); i++)
-    seq[i] = (int)(tlVector_Index (vec, i));
+	for (i=0; i<tlVector_Size (vec); i++)
+		seq[i] = (int)(tlVector_Index (vec, i));
   
-  return TRUE;
+	return TRUE;
 }
 
 
@@ -1579,14 +1565,14 @@ int tlVector_CopyToIntPointer (tlVector_t *vec, int *seq)
 /*----------------------------------------------------------------------------*/
 int tlVector_CopyToDoublePointer (tlVector_t *vec, double *seq)
 {
-  int		i;
+	int		i;
   
-  tl_return_val_if_fail (vec, "vec is NULL", FALSE);
+	tl_return_val_if_fail (vec, "vec is NULL", FALSE);
 
-  for (i=0; i<tlVector_Size (vec); i++)
-    seq[i] = tlVector_Index (vec, i);
+	for (i=0; i<tlVector_Size (vec); i++)
+		seq[i] = tlVector_Index (vec, i);
   
-  return TRUE;
+	return TRUE;
 }
 
 
@@ -1596,24 +1582,24 @@ int tlVector_CopyToDoublePointer (tlVector_t *vec, double *seq)
 /*----------------------------------------------------------------------------*/
 int tlVector_FileOut (tlVector_t *vec, char *filename)
 {
-  int		i;
-  FILE		*fp=NULL;
+	int		i;
+	FILE		*fp=NULL;
   
-  tl_return_val_if_fail (vec, "vec is NULL", FALSE);
-  tl_return_val_if_fail (filename, "filename is NULL", FALSE);
+	tl_return_val_if_fail (vec, "vec is NULL", FALSE);
+	tl_return_val_if_fail (filename, "filename is NULL", FALSE);
 
-  if (tl_fopen_as_write (&fp, filename)==FALSE) {
-    tl_warning ("Ouch!");
-    return FALSE;
-  }
+	if (tl_fopen_as_write (&fp, filename)==FALSE) {
+		tl_warning ("Ouch!");
+		return FALSE;
+	}
 
-  fprintf (fp, "%d\t", tlVector_Length (vec));
-  for (i=0; i<tlVector_Length (vec); i++)
-    {
-      fprintf (fp, "%g ", tlVector_Nth (vec, i));
-    }
-  fclose (fp);
-  return TRUE;
+	fprintf (fp, "%d\t", tlVector_Length (vec));
+	for (i=0; i<tlVector_Length (vec); i++)
+		{
+			fprintf (fp, "%g ", tlVector_Nth (vec, i));
+		}
+	fclose (fp);
+	return TRUE;
 }
 
 
@@ -1624,18 +1610,18 @@ int tlVector_FileOut (tlVector_t *vec, char *filename)
 /*----------------------------------------------------------------------------*/
 int tlVector_StreamOut (tlVector_t *vec, FILE *fp)
 {
-  int		i;
+	int		i;
   
-  tl_return_val_if_fail (vec, "vec is NULL", FALSE);
-  tl_return_val_if_fail (fp,  "file stream is NULL", FALSE);
+	tl_return_val_if_fail (vec, "vec is NULL", FALSE);
+	tl_return_val_if_fail (fp,  "file stream is NULL", FALSE);
 
-  fprintf (fp, "%d\t", tlVector_Length (vec));
-  for (i=0; i<tlVector_Length (vec); i++)
-    {
-      fprintf (fp, "%g ", tlVector_Nth (vec, i));
-    }
+	fprintf (fp, "%d\t", tlVector_Length (vec));
+	for (i=0; i<tlVector_Length (vec); i++)
+		{
+			fprintf (fp, "%g ", tlVector_Nth (vec, i));
+		}
 
-  return TRUE;
+	return TRUE;
 }
 
 
@@ -1649,36 +1635,36 @@ int tlVector_StreamOut (tlVector_t *vec, FILE *fp)
 /*----------------------------------------------------------------------------*/
 tlVector_t *tlVector_CreateFromFile (char *filename)
 {
-  int		i, length;
-  double	*result;
-  char		ctmp[MAX_STRING], *charp;
-  FILE		*fp;
-  tlVector_t	*vec = NULL;
+	int		i, length;
+	double	*result;
+	char		ctmp[MAX_STRING], *charp;
+	FILE		*fp;
+	tlVector_t	*vec = NULL;
 
-  if ((fp = fopen (filename, "r"))==NULL)
-    {
-      tl_warning ("No such file <%s>", filename);
-      return NULL;
-    }
+	if ((fp = fopen (filename, "r"))==NULL)
+		{
+			tl_warning ("No such file <%s>", filename);
+			return NULL;
+		}
   
-  vec = tlVector_Create ();
+	vec = tlVector_Create ();
 
-  fgets (ctmp, MAX_STRING, fp);
-  charp = ctmp;
+	fgets (ctmp, MAX_STRING, fp);
+	charp = ctmp;
 
-  length = (int) sscanf_double_with_pointer_move (&charp);
-  result = (double *)malloc (sizeof(double) * length);
+	length = (int) sscanf_double_with_pointer_move (&charp);
+	result = (double *)malloc (sizeof(double) * length);
 
-  for (i=0; i<length; i++)
-    {
-      result[i] = sscanf_double_with_pointer_move (&charp);
-    }
-  tlVector_SetValue (vec, result, length);
+	for (i=0; i<length; i++)
+		{
+			result[i] = sscanf_double_with_pointer_move (&charp);
+		}
+	tlVector_SetValue (vec, result, length);
 
-  free (result);
-  fclose (fp);
+	free (result);
+	fclose (fp);
   
-  return vec;
+	return vec;
 }
 
 
@@ -1689,26 +1675,26 @@ tlVector_t *tlVector_CreateFromFile (char *filename)
 /*----------------------------------------------------------------------------*/
 tlVector_t *tlVector_CreateFromStream (FILE *fp)
 {
-  int		i, length;
-  double	*result = NULL;
-  char		ctmp[MAX_STRING], *charp = NULL;
-  tlVector_t	*vec = NULL;
+	int		i, length;
+	double	*result = NULL;
+	char		ctmp[MAX_STRING], *charp = NULL;
+	tlVector_t	*vec = NULL;
 
-  vec = tlVector_Create ();
+	vec = tlVector_Create ();
 
-  if (fgets (ctmp, MAX_STRING, fp)==NULL) return NULL;
-  charp = ctmp;
-  length = sscanf_int_with_pointer_move (&charp);
-  result = (double *)malloc (sizeof(double) * length);
+	if (fgets (ctmp, MAX_STRING, fp)==NULL) return NULL;
+	charp = ctmp;
+	length = sscanf_int_with_pointer_move (&charp);
+	result = (double *)malloc (sizeof(double) * length);
 
-  for (i=0; i<length; i++)
-    {
-      result[i] = sscanf_double_with_pointer_move (&charp);
-    }
-  tlVector_SetValue (vec, result, length);
+	for (i=0; i<length; i++)
+		{
+			result[i] = sscanf_double_with_pointer_move (&charp);
+		}
+	tlVector_SetValue (vec, result, length);
 
-  free (result);
-  return vec;
+	free (result);
+	return vec;
 }
 
 
@@ -1719,19 +1705,19 @@ tlVector_t *tlVector_CreateFromStream (FILE *fp)
 /*----------------------------------------------------------------------------*/
 tlVector_t *tlVector_CreateFromIntPointer (int *seq, int length)
 {
-  int		i;
-  double	*dseq;
-  tlVector_t	*vec;
+	int		i;
+	double	*dseq;
+	tlVector_t	*vec;
 
-  dseq = (double *)malloc (sizeof(double) * length);
+	dseq = (double *)malloc (sizeof(double) * length);
 
-  vec = tlVector_Create ();
-  for (i=0; i<length; i++)
-    dseq[i] = (double)seq[i];
-  tlVector_SetValue (vec, dseq, length);
+	vec = tlVector_Create ();
+	for (i=0; i<length; i++)
+		dseq[i] = (double)seq[i];
+	tlVector_SetValue (vec, dseq, length);
 
-  free (dseq);
-  return vec;
+	free (dseq);
+	return vec;
 }
 
 
@@ -1743,10 +1729,10 @@ tlVector_t *tlVector_CreateFromIntPointer (int *seq, int length)
 /*----------------------------------------------------------------------------*/
 tlVector_t *tlVector_CreateFromDoublePointer(double *seq, int length)
 {
-  tlVector_t *vector;
+	tlVector_t *vector;
   
-  vector = tlVector_Create();
-  return vector;
+	vector = tlVector_Create();
+	return vector;
 }
 
 
@@ -1757,9 +1743,9 @@ tlVector_t *tlVector_CreateFromDoublePointer(double *seq, int length)
 /*----------------------------------------------------------------------------*/
 int tlVector_Smoothing (tlVector_t *vector)
 {
-  tl_return_val_if_fail (vector, "vector is NULL", FALSE);
+	tl_return_val_if_fail (vector, "vector is NULL", FALSE);
 
-  return TRUE;
+	return TRUE;
 }
 
 
@@ -1768,19 +1754,19 @@ int tlVector_Smoothing (tlVector_t *vector)
 /*----------------------------------------------------------------------------*/
 int tlVector_Verify (tlVector_t *vec)
 {
-  int		i;
+	int		i;
 
-  tl_return_val_if_fail (vec, "vec is NULL", FALSE);
+	tl_return_val_if_fail (vec, "vec is NULL", FALSE);
   
-  cerr << "-----------------   tlVector_Verify  (start)  -----------------" << endl;
-  cerr << "      length   = " << (int)(tlVector_Size(vec)) << endl;
-  cerr << "      contents = ";
-  for (i=0; i<(int)(tlVector_Size(vec)); i++)
-    cerr << "         %g" << tlVector_Index (vec, i);
-  cerr << endl;
-  cerr << "-----------------   tlVector_Verify   (end)   -----------------" << endl;
+	cerr << "-----------------   tlVector_Verify  (start)  -----------------" << endl;
+	cerr << "      length   = " << (int)(tlVector_Size(vec)) << endl;
+	cerr << "      contents = ";
+	for (i=0; i<(int)(tlVector_Size(vec)); i++)
+		cerr << "         %g" << tlVector_Index (vec, i);
+	cerr << endl;
+	cerr << "-----------------   tlVector_Verify   (end)   -----------------" << endl;
 
-  return TRUE;
+	return TRUE;
 }
 
 
@@ -1790,36 +1776,36 @@ int tlVector_Verify (tlVector_t *vec)
 /*---------------------------------------------------------------------------*/
 int tl_fopen_as_write (FILE **fp, char *filename)
 {
-  DIR		*dp;
-  char		dirname[MAX_STRING], com[MAX_STRING];
-  int		debug=0;
+	DIR		*dp;
+	char		dirname[MAX_STRING], com[MAX_STRING];
+	int		debug=0;
 
-  if(debug) tl_debug_step ("start");
-  tl_pickup_directory (filename, dirname);
+	if (debug) tl_debug_step ("start");
+	tl_pickup_directory (filename, dirname);
   
-  if ((dp = opendir(dirname))==NULL) 
-    {
-      if(debug) tl_message ("directory <%s> is not found", dirname);
-      if(debug) tl_message ("new directory is created");
-      sprintf (com, "mkdir -p %s", dirname);
-      //mkdir (dirname, 0755);
-      system (com);
-    }
-  else
-    {
-      if(debug) tl_message ("directory <%s> is suitable", dirname);
-      closedir (dp);
-    }
+	if ((dp = opendir(dirname))==NULL) 
+		{
+			if (debug) tl_message ("directory <%s> is not found", dirname);
+			if (debug) tl_message ("new directory is created");
+			sprintf (com, "mkdir -p %s", dirname);
+			//mkdir (dirname, 0755);
+			system (com);
+		}
+	else
+		{
+			if (debug) tl_message ("directory <%s> is suitable", dirname);
+			closedir (dp);
+		}
   
 
-  if ((*fp = fopen (filename, "w"))==NULL)
-    {
-      tl_warning ("File <%s> cannot created", filename);
-      return FALSE;
-    }
+	if ((*fp = fopen (filename, "w"))==NULL)
+		{
+			tl_warning ("File <%s> cannot created", filename);
+			return FALSE;
+		}
   
-  if(debug) tl_debug_step ("end");
-  return TRUE;
+	if (debug) tl_debug_step ("end");
+	return TRUE;
 }
 
 
@@ -1830,13 +1816,13 @@ int tl_fopen_as_write (FILE **fp, char *filename)
 /*---------------------------------------------------------------------------*/
 int tl_fopen_as_read (FILE **fp, char *filename)
 {
-  if ((*fp = fopen (filename, "r"))==NULL)
-    {
-      tl_warning ("File <%s> cannot opened", filename);
-      return FALSE;
-    }
+	if ((*fp = fopen (filename, "r"))==NULL)
+		{
+			tl_warning ("File <%s> cannot opened", filename);
+			return FALSE;
+		}
   
-  return TRUE;
+	return TRUE;
 }
 
 
@@ -1847,42 +1833,42 @@ int tl_fopen_as_read (FILE **fp, char *filename)
 /*---------------------------------------------------------------------------*/
 int tl_fopen_suffix_as_read (FILE **fp, char *filename, char *suffix)
 {
-  int		debug=0;
-  char		*real_suffix=NULL, real_filename[MAX_STRING];
+	int		debug=0;
+	char		*real_suffix=NULL, real_filename[MAX_STRING];
   
-  tl_return_val_if_fail (filename, "filename is NULL", FALSE);
-  tl_return_val_if_fail (suffix,   "suffix is NULL",   FALSE);
+	tl_return_val_if_fail (filename, "filename is NULL", FALSE);
+	tl_return_val_if_fail (suffix,   "suffix is NULL",   FALSE);
 
-  real_suffix = tl_get_suffix (filename);
-  if(debug) tl_message ("get_suffix : %s", real_suffix);
-  if(debug) tl_message ("filename   : %s", filename);
-  if(debug) tl_message ("suffix     : %s", suffix);
+	real_suffix = tl_get_suffix (filename);
+	if (debug) tl_message ("get_suffix : %s", real_suffix);
+	if (debug) tl_message ("filename   : %s", filename);
+	if (debug) tl_message ("suffix     : %s", suffix);
   
-  // Checking suffix: If there is no target suffix, automatically complemented
-  if (real_suffix==NULL)
-    {
-      if(debug) tl_message ("suffix is not exist");
-      sprintf (real_filename, "%s.%s", filename, suffix);
-    }
-  else if (strcmp (real_suffix, suffix))
-    {
-      // Checking suffix: If input suffix is not the same as the target, return FALSE
-      tl_warning ("suffix didn't match; <%s> is needed but <%s> is the real suffix", suffix, real_suffix);
-      return FALSE;
-    }
-  else
-    {
-      if(debug) tl_message ("through : filename = %s", filename);
-      strcpy (real_filename, filename);
-    }
-  if(debug) tl_message ("final filename   : %s", real_filename);
-  if ((*fp = fopen (real_filename, "r"))==NULL)
-    {
-      tl_warning ("File <%s> cannot opened", real_filename);
-      return FALSE;
-    }
-  if(debug) tl_debug_step ("end");
-  return TRUE;
+	// Checking suffix: If there is no target suffix, automatically complemented
+	if (real_suffix==NULL)
+		{
+			if (debug) tl_message ("suffix is not exist");
+			sprintf (real_filename, "%s.%s", filename, suffix);
+		}
+	else if (strcmp (real_suffix, suffix))
+		{
+			// Checking suffix: If input suffix is not the same as the target, return FALSE
+			tl_warning ("suffix didn't match; <%s> is needed but <%s> is the real suffix", suffix, real_suffix);
+			return FALSE;
+		}
+	else
+		{
+			if (debug) tl_message ("through : filename = %s", filename);
+			strcpy (real_filename, filename);
+		}
+	if (debug) tl_message ("final filename   : %s", real_filename);
+	if ((*fp = fopen (real_filename, "r"))==NULL)
+		{
+			tl_warning ("File <%s> cannot opened", real_filename);
+			return FALSE;
+		}
+	if (debug) tl_debug_step ("end");
+	return TRUE;
 }
 
 
@@ -1893,64 +1879,63 @@ int tl_fopen_suffix_as_read (FILE **fp, char *filename, char *suffix)
 /*---------------------------------------------------------------------------*/
 int tl_fopen_suffix_as_write (FILE **fp, char *filename, char *suffix)
 {
-  int		debug=0;
-  char		*real_suffix=NULL, real_filename[MAX_STRING];
+	int		debug=0;
+	char		*real_suffix=NULL, real_filename[MAX_STRING];
   
-  tl_return_val_if_fail (filename, "filename is NULL", FALSE);
-  tl_return_val_if_fail (suffix,   "suffix is NULL",   FALSE);
+	tl_return_val_if_fail (filename, "filename is NULL", FALSE);
+	tl_return_val_if_fail (suffix,   "suffix is NULL",   FALSE);
 
-  // checking suffix. If there is no suffix, automatically complemented
-  if (tl_get_suffix (filename)==NULL) {
-    sprintf (real_filename, "%s.%s", filename, suffix);
-  }
-  else if (strcmp (tl_get_suffix (filename), suffix))
-    {
-      // Checking suffix: If input suffix is not the same as the target, return FALSE
-      tl_warning ("suffix didn't match; <%s> is needed but <%s> is the real suffix", suffix, real_suffix);
-      return FALSE;
-    }
-  else
-    strcpy (real_filename, filename);
+	// checking suffix. If there is no suffix, automatically complemented
+	if (tl_get_suffix (filename)==NULL) {
+		sprintf (real_filename, "%s.%s", filename, suffix);
+	}
+	else if (strcmp (tl_get_suffix (filename), suffix))
+		{
+			// Checking suffix: If input suffix is not the same as the target, return FALSE
+			tl_warning ("suffix didn't match; <%s> is needed but <%s> is the real suffix", suffix, real_suffix);
+			return FALSE;
+		}
+	else
+		strcpy (real_filename, filename);
 
-  if(debug) tl_message ("filename   : %s", filename);
-  if(debug) tl_message ("suffix     : %s", suffix);
-  if(debug) tl_message ("get_suffix : %s", tl_get_suffix(filename));
-  if(debug) tl_message ("final filename : %s", real_filename);
-  if (tl_fopen_as_write (fp, real_filename)==FALSE)
-    {
-      tl_warning ("File <%s> cannot opened", real_filename);
-      return FALSE;
-    }
+	if (debug) tl_message ("filename   : %s", filename);
+	if (debug) tl_message ("suffix     : %s", suffix);
+	if (debug) tl_message ("get_suffix : %s", tl_get_suffix(filename));
+	if (debug) tl_message ("final filename : %s", real_filename);
+	if (tl_fopen_as_write (fp, real_filename)==FALSE)
+		{
+			tl_warning ("File <%s> cannot opened", real_filename);
+			return FALSE;
+		}
   
-  return TRUE;
+	return TRUE;
 }
 
 
 
 int tl_check_file_existence (char *filename)
 {
-  FILE		*fp;
+	FILE		*fp;
   
-  if ((fp = fopen (filename, "r"))==NULL)
-    return FALSE;
+	if ((fp = fopen (filename, "r"))==NULL)
+		return FALSE;
 
-  fclose (fp);
-  return TRUE;
+	fclose (fp);
+	return TRUE;
 }
 
 
 // Created on 2008-09-27 by inamura
 int tl_glist_search_string (GList *target_list, char *target_string)
 {
-  int	debug=0;
+	int	debug=0;
   
-  for (int i=0; i<(int)g_list_length (target_list); i++)
-    {
-      if(debug) tl_message ("check %s with %s", (char *)g_list_nth_data (target_list, i), target_string);
-      if (!strcmp ((char *)g_list_nth_data (target_list, i), target_string))
-	return i;
-    }
-  return -1;
+	for (int i=0; i<(int)g_list_length (target_list); i++) {
+		if (debug) tl_message ("check %s with %s", (char *)g_list_nth_data (target_list, i), target_string);
+		if (!strcmp ((char *)g_list_nth_data (target_list, i), target_string))
+			return i;
+	}
+	return -1;
 }
 
 
@@ -1959,15 +1944,15 @@ int tl_glist_search_string (GList *target_list, char *target_string)
 /*-----------------------------------------------------------------------------------*/
 int d_print (char const *format, ...)
 {
-  char		s[MAX_STRING];
-  va_list	list;
+	char	s[MAX_STRING];
+	va_list	list;
 
-  va_start(list, format);
-  vsprintf(s, format, list);
-  va_end(list);
-  fprintf (stderr, "%s", s);
-  fflush (stderr);
-  return TRUE;
+	va_start(list, format);
+	vsprintf(s, format, list);
+	va_end(list);
+	fprintf (stderr, "%s", s);
+	fflush (stderr);
+	return TRUE;
 }
 
 
@@ -1978,15 +1963,14 @@ int d_print (char const *format, ...)
 /*-----------------------------------------------------------------------------------*/
 int d_printf (int flag, const char *format, ...)
 {
-  char		s[MAX_STRING];
-  va_list		list;
+	char		s[MAX_STRING];
+	va_list		list;
 
-  if (flag)
-    {
-      va_start(list, format);
-      vsprintf(s, format, list);
-      va_end(list);
-      fprintf( stderr, "%s", s );
-    }
-  return TRUE;
+	if (flag) {
+		va_start(list, format);
+		vsprintf(s, format, list);
+		va_end(list);
+		fprintf( stderr, "%s", s );
+	}
+	return TRUE;
 }

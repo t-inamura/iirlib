@@ -49,12 +49,12 @@ using namespace std;
 // Added on 2002 Jan 30th
 // Memo : getting a hist from glib warning
 /*---------------------------------------------------------------------------*/
-#define	tl_warning(format, args...)	G_STMT_START{         \
-   fprintf(stderr, "\n\n[%s:line.%d] <%s> ", __FILE__, __LINE__, __PRETTY_FUNCTION__);\
-   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_WARNING, format, ##args);\
-   fprintf(stderr, "\n\n");}G_STMT_END
+#define	tl_warning(format, args...)	G_STMT_START{	\
+		fprintf(stderr, "\n\n[%s:line.%d] <%s> ", __FILE__, __LINE__, __PRETTY_FUNCTION__);	\
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_WARNING, format, ##args);		\
+		fprintf(stderr, "\n\n");}G_STMT_END
 
-#define	tl_message(format, args...)	G_STMT_START{			\
+#define	tl_message(format, args...)	G_STMT_START{	\
    fprintf(stderr, "[%s:line.%d] <%s> : ", __FILE__, __LINE__, __PRETTY_FUNCTION__);\
    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, format, ##args);}G_STMT_END
 
@@ -64,7 +64,7 @@ using namespace std;
 // Added on 2002 Jan 30th
 // Memo : got a hint from glib's warning function
 /*---------------------------------------------------------------------------*/
-#define tl_return_val_if_fail(expr,mes,val)  G_STMT_START{		\
+#define tl_return_val_if_fail(expr,mes,val)  G_STMT_START{	\
      if (!(expr))							\
        {								\
 	 tl_warning(mes);						\
@@ -76,8 +76,8 @@ using namespace std;
 // Added : 2002 Feb 17th
 // Memo  : old debugging function
 /*---------------------------------------------------------------------------*/
-#define tl_debug_step(mes)  G_STMT_START{				\
-  fprintf(stderr, "[%s:line.%d] <%s> Step %s\n", __FILE__, __LINE__,	\
+#define tl_debug_step(mes)  G_STMT_START{	\
+		fprintf(stderr, "[%s:line.%d] <%s> Step %s\n", __FILE__, __LINE__, \
 	   __PRETTY_FUNCTION__, mes);    }G_STMT_END
 
 
@@ -92,37 +92,37 @@ typedef int (*Func_Ptr_with_arg)(void *dummy);
 typedef int (*Func_Ptr_with_2arg)(void *dummy1, void *dummy2);
 
 typedef struct {
-  char		*name;
-  Func_Ptr	func;
+	char		*name;
+	Func_Ptr	func;
 }
 functable_t,	*functable_ptr;
 
 
 typedef struct {
-  char			*name;
-  Func_Ptr_with_int	func;
+	char			*name;
+	Func_Ptr_with_int	func;
 }
 functable_with_int_t,	*functable_with_int_ptr;
 
 
 typedef struct {
-  char			*name;
-  Func_Ptr_with_arg	func;
+	char			*name;
+	Func_Ptr_with_arg	func;
 }
 functable_with_arg_t,	*functable_with_arg_ptr;
 
 
 typedef struct {
-  char			*name;
-  Func_Ptr_with_2arg	func;
+	char			*name;
+	Func_Ptr_with_2arg	func;
 }
 functable_with_2arg_t,	*functable_with_2arg_ptr;
 
 
 typedef struct
 {
-  double	key;	// a value to be referred
-  int		info;	// ID
+	double	key;	// a value to be referred
+	int		info;	// ID
 }
 bubble_data;
 
@@ -139,12 +139,12 @@ typedef GArray	tlVector_t;
 #define tl_sscanf_double_with_pointer_move(arg)  sscanf_double_with_pointer_move(arg)
 #define tl_pickup_directory(arg1,arg2)		 pickup_directory(arg1,arg2)
 
-int		tl_strmember			(const char *reference, const char *search);
-GString		*tl_string_assoc		(char *src, char *keyword);
-char		*tl_pickup_last_filename	(char *fullpath);
+int      tl_strmember			(const char *reference, const char *search);
+GString	*tl_string_assoc		(char *src, char *keyword);
+char	*tl_pickup_last_filename	(char *fullpath);
 int		 tl_string_getkeyword		(char *src, char *keyword, char *result);
-void		 remove_backslash_N		(char *string );
-int		tl_remove_double_q		(char *str, char *str2);
+void     remove_backslash_N		(char *string );
+int      tl_remove_double_q		(char *str, char *str2);
 int		remove_dot			(char *string);
 void		add_backslash_N			(char *sentence);
 int		sscanf_int_with_pointer_move	(char **charp);
@@ -204,9 +204,9 @@ tlVector_t	*tlVector_CreateFromFile	(char *filename);
 tlVector_t	*tlVector_CreateFromStream	(FILE *fp);
 tlVector_t	*tlVector_CreateFromIntPointer	(int *seq, int length);
 tlVector_t	*tlVector_CreateFromDoublePointer(double *seq, int length);
-int		 tlVector_FileOut		(tlVector_t *vec, char *filename);
-int		 tlVector_StreamOut		(tlVector_t *vec, FILE *fp);
-int		 tlVector_Smoothing		(tlVector_t *vector);
+int	         tlVector_FileOut		(tlVector_t *vec, char *filename);
+int	         tlVector_StreamOut		(tlVector_t *vec, FILE *fp);
+int          tlVector_Smoothing		(tlVector_t *vector);
 
 
 //#ifdef __cplusplus
