@@ -51,8 +51,8 @@
  *	Changed into c++
  */
 
-#ifndef __CONNECTION_H__tetsu
-#define __CONNECTION_H__tetsu
+#ifndef __IIRLIB_CONNECTION_H__
+#define __IIRLIB_CONNECTION_H__
 
 #include <cstdio>
 #include <cstdlib>
@@ -88,29 +88,29 @@
 #endif
                               
 
-#define		CONNECTION_SUCCESS	1
-#define		CONNECTION_FAIL		-1
-#define		CONNECTION_BYTE		(1<<2)
-#define 	CONNECTION_STRING	(1<<3)
-#define 	CONNECTION_FIFO		(1<<4)
-#define 	CONNECTION_SOCKET	(1<<5)
-#define 	CONNECTION_FIFO_REVERSE	(1<<6)
-#define 	CONNECTION_FIFO_NORMAL	(1<<7)
-#define 	CONNECTION_SELECT	(1<<8)
-#define		CONNECTION_SERVER	(1<<9)
-#define		CONNECTION_MSERVER	(1<<10)
-#define		CONNECTION_CLIENT	(1<<11)
-#define		CONNECTION_INTEGER	(1<<12)
-#define		CONNECTION_WORD		(1<<13)
-#define		CONNECTION_STREAM	(1<<14)
-#define		CONNECTION_LISP		(1<<15)
-#define		CONNECTION_C		(1<<16)
-#define 	CONNECTION_DOUBLE	(1<<17)
-#define		CONNECTION_TLVECTOR	(1<<18)
-#define		CONNECTION_MULTICLIENT	(1<<19)
+#define	CONNECTION_SUCCESS      (1)
+#define	CONNECTION_FAIL         (-1)
+#define	CONNECTION_BYTE         (1<<2)
+#define	CONNECTION_STRING       (1<<3)
+#define	CONNECTION_FIFO         (1<<4)
+#define	CONNECTION_SOCKET       (1<<5)
+#define	CONNECTION_FIFO_REVERSE (1<<6)
+#define	CONNECTION_FIFO_NORMAL  (1<<7)
+#define	CONNECTION_SELECT       (1<<8)
+#define	CONNECTION_SERVER       (1<<9)
+#define	CONNECTION_MSERVER      (1<<10)
+#define	CONNECTION_CLIENT       (1<<11)
+#define	CONNECTION_INTEGER      (1<<12)
+#define	CONNECTION_WORD         (1<<13)
+#define	CONNECTION_STREAM       (1<<14)
+#define	CONNECTION_LISP         (1<<15)
+#define	CONNECTION_C            (1<<16)
+#define	CONNECTION_DOUBLE       (1<<17)
+#define	CONNECTION_TLVECTOR     (1<<18)
+#define	CONNECTION_MULTICLIENT  (1<<19)
 
-#define		CONNECTION_BUSY		"BUSY"
-#define		CONNECTION_OK		"O.K."
+#define	CONNECTION_BUSY         "BUSY"
+#define	CONNECTION_OK           "O.K."
 
 #if 0
 // void *memset(void* p, int b, size_t n)   
@@ -131,54 +131,54 @@
 class Connection
 {
 public:
-  Connection(int type);
-  virtual ~Connection();  
+	Connection(int type);
+	virtual ~Connection();  
 
-  int GetType		();
-  int Open		(char *readfile,char *writefile, int port);
-  char *GetName		();
-  int SetName		(char *name_str);
-  int FdRead		(int fd);
-  int FdWrite		(int fd);
-  int SetStream		(char *buf);
-  int FdRead		();
-  int FdWrite		();
-  FILE *FpRead		();
-  FILE *FpWrite		();
-  FILE *FpRead		(FILE *fp);
-  FILE *FpWrite		(FILE *fp);
-  int Close		();
-  int MaxFD		(int max);
-  int Select		();        
-  int SelectWithTime	(int msec);
-  int FDSet		(fd_set *readfds);  
-  int FDISSET		(fd_set *readfds); 
-  int DebugPrintFD	();
-  int Receive		(int typ, gpointer dat);
-  int Send		(int typ, gpointer dat);
-  int MultiClientClose	();
-  int SocketClientOpen	(char *serverhost,int port);
-  int MultiClientOpen	(char *serverhost,int port);
-  int PrintAll		();
-  int my_receive	(int fd, void *buf, int len);
-  int my_send		(int fd, void *buf, int len);
-  int read_integer	(int fd, int *data);
-  int Send_Integer	(gpointer data);
-  int Send_tlVector	(tlVector_t *tlvec);
-  int Receive_tlVector	(tlVector_t *tlvec);
+	int GetType          ();
+	int Open             (char *readfile,char *writefile, int port);
+	char *GetName        ();
+	int SetName          (char *name_str);
+	int FdRead           (int fd);
+	int FdWrite          (int fd);
+	int SetStream        (char *buf);
+	int FdRead           ();
+	int FdWrite          ();
+	FILE *FpRead         ();
+	FILE *FpWrite        ();
+	FILE *FpRead         (FILE *fp);
+	FILE *FpWrite        (FILE *fp);
+	int Close            ();
+	int MaxFD            (int max);
+	int Select           ();
+	int SelectWithTime   (int msec);
+	int FDSet            (fd_set *readfds);  
+	int FDISSET          (fd_set *readfds); 
+	int DebugPrintFD     ();
+	int Receive          (int typ, gpointer dat);
+	int Send             (int typ, gpointer dat);
+	int MultiClientClose ();
+	int SocketClientOpen (char *serverhost,int port);
+	int MultiClientOpen  (char *serverhost,int port);
+	int PrintAll         ();
+	int my_receive       (int fd, void *buf, int len);
+	int my_send          (int fd, void *buf, int len);
+	int read_integer     (int fd, int *data);
+	int Send_Integer     (gpointer data);
+	int Send_tlVector    (tlVector_t *tlvec);
+	int Receive_tlVector (tlVector_t *tlvec);
 
 private:
-  char		name[64];
-  char		readfile[128];
-  char		writefile[128];
-  int		port;			// this is not used in case of Socket
-  int		type;			// fifo or socket
-  int		fd_read;
-  int		fd_write;
-  FILE		*fp_read;
-  FILE		*fp_write;
-  char		*stream;		// Buffer for CONNECTION_STREAM
+	char        name[64];
+	char        readfile[128];
+	char        writefile[128];
+	int         port;        // this is not used in case of Socket
+	int         type;        // fifo or socket
+	int         fd_read;
+	int         fd_write;
+	FILE        *fp_read;
+	FILE        *fp_write;
+	char        *stream;     // Buffer for CONNECTION_STREAM
 };
 
-#endif /* __CONNECTION_H__tetsu */
+#endif /* __IIRLIB_CONNECTION_H__ */
 
