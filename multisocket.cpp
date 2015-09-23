@@ -2,9 +2,9 @@
 /*
  *	IIRLIB  Multi Socket Connection Modules
  *      
- *	Last modified on 2008 Feb 13th 	by Tetsunari Inamura
+ *	Last modified on 2015 Sep 23rd 	by Tetsunari Inamura
  *
- *	Copyright (c) Tetsunari Inamura 1998-2008.
+ *	Copyright (c) Tetsunari Inamura 1998-2015.
  *	All Rights Reserved.
  */
 
@@ -85,47 +85,46 @@
 #include "multisocket.h"
 #include "connection.h"
 
-#define	SOCKET_ONLY
+#define   SOCKET_ONLY
 
 
 
 
 // 新設 : 1999 Feb 15th
 // 動作 : マルチアクセスサーバの構造体生成
-// 入力 : *str		: 構造体の名前
-// 入力 : port		: 使用するポート
+// 入力 : *str   : 構造体の名前
+// 入力 : port   : 使用するポート
 MultiSocket::MultiSocket (char *str, int ports)
 {
   
-  int			i, f=1;
-  struct sockaddr_in	me;
+	int                 i, f=1;
+	struct sockaddr_in  me;
   
-  strcpy (name, str);
-  port = ports;
-  for (i=0; i<MAX_MULTI_SOCKET; i++)
-    connection[i] = NULL;
+	strcpy (name, str);
+	port = ports;
+	for (i=0; i<MAX_MULTI_SOCKET; i++)
+		connection[i] = NULL;
 
-  tl_message ("%s: port=%d", name, port);
+	tl_message ("%s: port=%d", name, port);
 
-  socket_fd = socket( AF_INET, SOCK_STREAM, 0 );                             
-  if (socket_fd == -1)
-    {
-      perror( "Multi server socket");
-      return;
-    }
-  setsockopt (socket_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&f, sizeof f);     
+	socket_fd = socket( AF_INET, SOCK_STREAM, 0 );
+	if (socket_fd == -1)
+		{
+			perror( "Multi server socket");
+			return;
+		}
+	setsockopt (socket_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&f, sizeof f);
+	bzero((char *)&me, sizeof(me));
+	me.sin_family = AF_INET;
+	me.sin_addr.s_addr = INADDR_ANY;     // server is itself
+	me.sin_port = htons(port);
 
-  bzero((char *)&me, sizeof(me));                                         
-  me.sin_family = AF_INET;
-  me.sin_addr.s_addr = INADDR_ANY;		// server is itself
-  me.sin_port = htons(port);
-
-  if (bind( socket_fd, (const struct sockaddr *)&me, sizeof(me) ) == -1)
-    {
-      perror ("Multi server:bind :");
-      return;
-    }
-  listen( socket_fd, MAX_MULTI_SOCKET );
+	if (bind( socket_fd, (const struct sockaddr *)&me, sizeof(me) ) == -1)
+		{
+			perror ("Multi server:bind :");
+			return;
+		}
+	listen( socket_fd, MAX_MULTI_SOCKET );
 }
 
 
@@ -141,51 +140,51 @@ MultiSocket::MultiSocket (char *str, int ports)
 //	: 接続 FAIL なら TL_FAIL
 int MultiSocket::Accept()
 {
-  int			s, i, debug=0;
-  struct sockaddr_in	caddr; // クライアント側のアドレス情報を入れるところ
-  char			new_name[MAX_STRING], com[10];
-  Connection		*tmpconnection;
+	int                 s, i, debug=0;
+	struct sockaddr_in  caddr; // クライアント側のアドレス情報を入れるところ
+	char                new_name[MAX_STRING], com[10];
+	Connection          *tmpconnection;
 
-  if(debug) tl_message ("%s : start", name);
-  socklen_t len = (socklen_t)sizeof(caddr);
-  s = accept (socket_fd, (struct sockaddr *)&caddr, &len);
-  if(debug) tl_message ("Socket accepted");
-  for( i=0; i<MAX_MULTI_SOCKET; i++ )
-    {
-      if (i==MAX_MULTI_SOCKET-1 && connection[i]!=NULL)
-	{
-	  // もういっぱいで接続不可能である事を向こうに知らせる
-	  tl_message ("Too busy");
-	  strcpy (com, CONNECTION_BUSY);
-	  connection[i]->my_send (s, com, 4);
-	  // Lisp, C 共通仕様で文字列終了を意味する '\n' を送信
-	  com[0] = '\n';
-	  connection[i]->my_send (s, com, 1);
-	  return FALSE;
-	}
-      if (connection[i]==NULL)
-	{
-	  tmpconnection = new Connection( CONNECTION_SOCKET );
+	if(debug) tl_message ("%s : start", name);
+	socklen_t len = (socklen_t)sizeof(caddr);
+	s = accept (socket_fd, (struct sockaddr *)&caddr, &len);
+	if(debug) tl_message ("Socket accepted");
+	for( i=0; i<MAX_MULTI_SOCKET; i++ )
+		{
+			if (i==MAX_MULTI_SOCKET-1 && connection[i]!=NULL)
+				{
+					// もういっぱいで接続不可能である事を向こうに知らせる
+					tl_message ("Too busy");
+					strcpy (com, CONNECTION_BUSY);
+					connection[i]->my_send (s, com, 4);
+					// Lisp, C 共通仕様で文字列終了を意味する '\n' を送信
+					com[0] = '\n';
+					connection[i]->my_send (s, com, 1);
+					return FALSE;
+				}
+			if (connection[i]==NULL)
+				{
+					tmpconnection = new Connection( CONNECTION_SOCKET );
 	
-	  tmpconnection->FdRead(s);
-	  tmpconnection->FdWrite(s);
-	  tmpconnection->FpRead(fdopen( s,"r+" ));// Read&Write
-	  tmpconnection->FpWrite(tmpconnection->FpRead());
-	  if(debug) tl_message ("System allows this plugin : ");
-	  strcpy( com, CONNECTION_OK );
-	  tmpconnection->my_send (s, com, 4);	// 受け付け OK の信号を向こうに知らせる
-	  // Lisp, C 共通仕様で文字列終了を意味する '\n' を送信
-	  com[0] = '\n';
-	  tmpconnection->my_send (s, com, 1);
-	  if(debug) tl_message ("Now reading client name...");
-	  tmpconnection->Receive(CONNECTION_STRING, new_name);
-	  if(debug) tl_message ("Client Name = %s", new_name);
-	  tmpconnection->SetName(new_name );
-	  connection[i] = tmpconnection;
-	  return i;
-	}
-    }
-  return FALSE;
+					tmpconnection->FdRead(s);
+					tmpconnection->FdWrite(s);
+					tmpconnection->FpRead(fdopen( s,"r+" ));// Read&Write
+					tmpconnection->FpWrite(tmpconnection->FpRead());
+					if(debug) tl_message ("System allows this plugin : ");
+					strcpy( com, CONNECTION_OK );
+					tmpconnection->my_send (s, com, 4);	// 受け付け OK の信号を向こうに知らせる
+					// Lisp, C 共通仕様で文字列終了を意味する '\n' を送信
+					com[0] = '\n';
+					tmpconnection->my_send (s, com, 1);
+					if(debug) tl_message ("Now reading client name...");
+					tmpconnection->Receive(CONNECTION_STRING, new_name);
+					if(debug) tl_message ("Client Name = %s", new_name);
+					tmpconnection->SetName(new_name );
+					connection[i] = tmpconnection;
+					return i;
+				}
+		}
+	return FALSE;
 }
 
 
@@ -195,38 +194,38 @@ int MultiSocket::Accept()
 int MultiSocket::Close(int no)
 {
   
-  if (no<0 || no>=MAX_MULTI_SOCKET)
-    {
-      tl_warning ("No such no.%d", no);
-      return FALSE;
-    }
-  connection[no] = NULL;
-  return TRUE;
+	if (no<0 || no>=MAX_MULTI_SOCKET)
+		{
+			tl_warning ("No such no.%d", no);
+			return FALSE;
+		}
+	connection[no] = NULL;
+	return TRUE;
 }
 
 
 // 新設 : 1999 Feb 16th
 // 動作 : マルチアクセスのための fd を max_fd と比較して，max_fd を返す
-// 入力 : *mscoket	: 接続が成立している分のロボットとの通信路
-// 入力 : max		: 現段階での一番大きい fd 値
+// 入力 : *mscoket : 接続が成立している分のロボットとの通信路
+// 入力 : max      : 現段階での一番大きい fd 値
 int MultiSocket::MaxFD(int max)
 {
-  int		i, max_fd = max;
-  int		debug = 0;
+	int     i, max_fd = max;
+	int     debug = 0;
 
-  if(debug) tl_message ("%s start\n", name);
-  for( i=0; i<MAX_MULTI_SOCKET; i++ )
-    {
-      if(connection[i]!=NULL)
-	{
-	  if(connection[i]->FdWrite() > max_fd)
-	    max_fd = connection[i]->FdWrite();
-	}
-    }
-  if( socket_fd > max_fd )
-    max_fd = socket_fd;
-  if(debug) tl_message ("fd change %d -> %d", max, max_fd);
-  return max_fd;
+	if(debug) tl_message ("%s start\n", name);
+	for( i=0; i<MAX_MULTI_SOCKET; i++ )
+		{
+			if(connection[i]!=NULL)
+				{
+					if(connection[i]->FdWrite() > max_fd)
+						max_fd = connection[i]->FdWrite();
+				}
+		}
+	if( socket_fd > max_fd )
+		max_fd = socket_fd;
+	if(debug) tl_message ("fd change %d -> %d", max, max_fd);
+	return max_fd;
 }
 
 
@@ -235,21 +234,21 @@ int MultiSocket::MaxFD(int max)
 //        可能性のある fd への FD_SET
 int MultiSocket::FDSet(fd_set *readfds )
 {
-  int		i, debug=0;
+	int		i, debug=0;
   
   
-  if(debug) tl_message ("%s : start", name);
-  for (i=0; i<MAX_MULTI_SOCKET; i++)
-    {
-      if( connection[i]!=NULL )
-	{
-	  FD_SET( connection[i]->FdRead(), readfds );
-	  if(debug) tl_message ("FD_SET(%d)", connection[i]->FdRead());
-	}
-    }
-  FD_SET(socket_fd, readfds);
-  if(debug) tl_message ("FD_SET(%d)", socket_fd);
-  return TRUE;
+	if(debug) tl_message ("%s : start", name);
+	for (i=0; i<MAX_MULTI_SOCKET; i++)
+		{
+			if( connection[i]!=NULL )
+				{
+					FD_SET( connection[i]->FdRead(), readfds );
+					if(debug) tl_message ("FD_SET(%d)", connection[i]->FdRead());
+				}
+		}
+	FD_SET(socket_fd, readfds);
+	if(debug) tl_message ("FD_SET(%d)", socket_fd);
+	return TRUE;
 }
 
 
@@ -261,25 +260,25 @@ int MultiSocket::FDSet(fd_set *readfds )
 //	:		: 新しい接続要求であれば，TL_FAIL
 int MultiSocket::FDISSET(fd_set *readfds, int *result)
 {
-  int		i;
+	int		i;
   
-  for (i=0; i<MAX_MULTI_SOCKET; i++)
-    {
-      if (connection[i]!=NULL)
-	{
-	  if (FD_ISSET( connection[i]->FdRead(), readfds))
-	    {
-	      *result = i;
-	      return TRUE;
-	    }
-	}
-    }
-  if( FD_ISSET(socket_fd, readfds ) )
-    {
-      *result = MULTI_SOCKET_NEW_CONNECTION;
-      return TRUE;
-    }
-  return FALSE;
+	for (i=0; i<MAX_MULTI_SOCKET; i++)
+		{
+			if (connection[i]!=NULL)
+				{
+					if (FD_ISSET( connection[i]->FdRead(), readfds))
+						{
+							*result = i;
+							return TRUE;
+						}
+				}
+		}
+	if( FD_ISSET(socket_fd, readfds ) )
+		{
+			*result = MULTI_SOCKET_NEW_CONNECTION;
+			return TRUE;
+		}
+	return FALSE;
 }
 
 
@@ -289,15 +288,15 @@ int MultiSocket::FDISSET(fd_set *readfds, int *result)
 // 入力 : no		: 対象の Connection 構造体の番号
 Connection *MultiSocket::GetConnection (int no)
 {
-  if (no<0 || no>=MAX_MULTI_SOCKET)
-    {
-      tl_warning ("No.%d is too large. MAX is %d!", no, MAX_MULTI_SOCKET);
-      return NULL;
-    }
-  if (!(connection[no]))
-    {
-      tl_warning ("Target connection Pointer is NULL!");
-      return NULL;
-    }
-  return connection[no];
+	if (no<0 || no>=MAX_MULTI_SOCKET)
+		{
+			tl_warning ("No.%d is too large. MAX is %d!", no, MAX_MULTI_SOCKET);
+			return NULL;
+		}
+	if (!(connection[no]))
+		{
+			tl_warning ("Target connection Pointer is NULL!");
+			return NULL;
+		}
+	return connection[no];
 }
