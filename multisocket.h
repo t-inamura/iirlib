@@ -34,8 +34,8 @@
 #include "glib.h"
 #include "connection.h"
 
-#define MAX_MULTI_SOCKE     3
-#define NAMESIZE            *64
+#define MAX_MULTI_SOCKET    3
+#define NAMESIZE            64
 #define MULTI_SOCKET_NEW_CONNECTION	(-1)
 
 
@@ -47,7 +47,7 @@ public:
 	int        Close             (int no);
 	int        MaxFD             (int max );
 	int        FDSet             (fd_set *readfds);
-	int        FDISSE            (fd_set *readfds, int *result);
+	int        FDISSET           (fd_set *readfds, int *result);
 	int        DebugPrintFD      ();
 	Connection *    GetConnection (int n);
 
@@ -56,5 +56,7 @@ private:
 	int        socket_fd;
 	int        port;
     Connection *connection[MAX_MULTI_SOCKET];        // sequence of Connection instances};
+
+};
 
 #endif

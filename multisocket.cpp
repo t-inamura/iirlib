@@ -2,7 +2,7 @@
 /*
  *	IIRLIB  Multi Socket Connection Modules
  *      
- *	Last modified on 2015 Sep 23rd 	by Tetsunari Inamura
+ *	Last modified on 2015 Sep 27th 	by Tetsunari Inamura
  *
  *	Copyright (c) Tetsunari Inamura 1998-2015.
  *	All Rights Reserved.
@@ -96,7 +96,6 @@
 // 入力 : port   : 使用するポート
 MultiSocket::MultiSocket (char *str, int ports)
 {
-  
 	int                 i, f=1;
 	struct sockaddr_in  me;
   
