@@ -2,11 +2,13 @@
 /*
  *  IIRLIB C Connection Modules
  *      
- *  Last modified on 2008 Feb 13th by Tetsunari Inamura
+ *  Last modified on 2015 Sep 27th by Tetsunari Inamura
  *
- *	Copyright (c) Tetsunari Inamura 1998--2008.
+ *	Copyright (c) Tetsunari Inamura 1998--2015.
  *	All Rights Reserved.
  */
+
+#include <string.h>
 
 #include "connection.h"
 #include "stdio.h"                         

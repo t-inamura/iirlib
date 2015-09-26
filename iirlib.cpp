@@ -2,9 +2,9 @@
 /*
  *	IIR (Intelligent Interactive Robotics Lab.) Library: C++ Core Module
  *      
- *	Last modified on 2008-10-05 by Tetsunari Inamura
+ *	Last modified on 2015 Sep 27th by Tetsunari Inamura
  *
- *	Copyright (c) Tetsunari Inamura 1999--2008.
+ *	Copyright (c) Tetsunari Inamura 1999--2015.
  *	All Rights Reserved.
  */
 
@@ -58,6 +58,7 @@
  *	add tl_word_array_to_glist to use any eliminators
  */
 
+#include <string.h>
 
 #include "iirlib.h"
 
@@ -1383,15 +1384,14 @@ GList *tl_list_string_to_glist (char *str)
 /*-----------------------------------------------------------------------------------*/
 GList *tl_csv_to_glist (char *str)
 {
-	int		num, debug=0;
-	char		*charp, *word;
-	gchar		**result;
-	GList		*glist=NULL;
+	int	   num, debug=0;
+	char   *word;
+	gchar  **result;
+	GList  *glist=NULL;
 
 	if (debug) tl_message ("Src = {%s}", str);
 	g_return_val_if_fail (str != NULL, NULL);
 
-	charp = str;
 	num = string_count (str, ',') + 1;
 	result = g_strsplit (str, ",", 0);
 	if (debug) cerr << "number of factor = " << num << endl;
@@ -1418,17 +1418,16 @@ GList *tl_csv_to_glist (char *str)
 /*-----------------------------------------------------------------------------------*/
 GList *tl_word_array_to_glist (char *str, char elim)
 {
-	int		num, debug=0;
-	char		*charp, *word, eliminator[2];
-	gchar		**result;
-	GList		*glist=NULL;
+	int     num, debug=0;
+	char    *word, eliminator[2];
+	gchar   **result;
+	GList   *glist=NULL;
 
 	if (debug) tl_message ("Src = {%s}", str);
 	g_return_val_if_fail (str != NULL, NULL);
 
 	eliminator[0] = elim;	eliminator[1] = '\0';
   
-	charp = str;
 	num = string_count (str, eliminator[0]) + 1;
 	result = g_strsplit (str, eliminator, 0);
 	if (debug) cerr << "number of factor = " << num << endl;
@@ -1776,9 +1775,9 @@ int tlVector_Verify (tlVector_t *vec)
 /*---------------------------------------------------------------------------*/
 int tl_fopen_as_write (FILE **fp, char *filename)
 {
-	DIR		*dp;
-	char		dirname[MAX_STRING], com[MAX_STRING];
-	int		debug=0;
+	DIR     *dp;
+	char    dirname[MAX_STRING], com[MAX_STRING];
+	int     debug=0, ret;
 
 	if (debug) tl_debug_step ("start");
 	tl_pickup_directory (filename, dirname);
@@ -1789,14 +1788,14 @@ int tl_fopen_as_write (FILE **fp, char *filename)
 			if (debug) tl_message ("new directory is created");
 			sprintf (com, "mkdir -p %s", dirname);
 			//mkdir (dirname, 0755);
-			system (com);
+			ret = system (com);
 		}
 	else
 		{
 			if (debug) tl_message ("directory <%s> is suitable", dirname);
-			closedir (dp);
+			ret = closedir (dp);
 		}
-  
+	if (ret==-1) tl_warning ("Someing error by system call");
 
 	if ((*fp = fopen (filename, "w"))==NULL)
 		{
